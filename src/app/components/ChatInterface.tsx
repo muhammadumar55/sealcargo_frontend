@@ -142,13 +142,10 @@ export function ChatInterface() {
               <h2 className="text-xl font-semibold text-[#0B3C5D]">
                 {t("chat.title")}
               </h2>
-<<<<<<< HEAD
-=======
               <p className="text-sm text-slate-600 mt-1">
                 {t("chat.subtitle")} •{" "}
                 
               </p>
->>>>>>> 376c552e18e61246847da99aa8ec99e5762d77b6
             </div>
             <LanguageToggle />
           </div>
@@ -249,11 +246,7 @@ export function ChatInterface() {
             </button>
           </div>
           <p className="text-xs text-slate-400 text-center mt-2">
-<<<<<<< HEAD
             Press Enter to send
-=======
-           Press Enter to send
->>>>>>> 376c552e18e61246847da99aa8ec99e5762d77b6
           </p>
         </div>
       </div>
