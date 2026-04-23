@@ -142,12 +142,6 @@ export function ChatInterface() {
               <h2 className="text-xl font-semibold text-[#0B3C5D]">
                 {t("chat.title")}
               </h2>
-              <p className="text-sm text-slate-600 mt-1">
-                {t("chat.subtitle")} •{" "}
-                <span className="text-green-600 font-medium">
-                  Powered by Grok AI
-                </span>
-              </p>
             </div>
             <LanguageToggle />
           </div>
@@ -248,7 +242,7 @@ export function ChatInterface() {
             </button>
           </div>
           <p className="text-xs text-slate-400 text-center mt-2">
-            Powered by Grok AI • Press Enter to send
+            Press Enter to send
           </p>
         </div>
       </div>
