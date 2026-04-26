@@ -163,13 +163,10 @@ export function SupplierResults() {
   // ── Resolve suppliers (API data or mock fallback) ─────────────────────────
   const apiData = location.state?.suppliers;
 
-  const displaySuppliers: Supplier[] = (() => {
-    if (apiData?.topSuppliers && apiData.topSuppliers.length > 0) {
-      return apiData.topSuppliers;
-    }
-    const filtered = MOCK_SUPPLIERS.filter((s) => s.aiScore >= 80);
-    return filtered.length > 0 ? filtered.slice(0, 9) : MOCK_SUPPLIERS.slice(0, 9);
-  })();
+const displaySuppliers: Supplier[] =
+  apiData?.topSuppliers?.length > 0
+    ? apiData.topSuppliers
+    : [];
 
   const filteredList: FilteredOutSupplier[] =
     apiData?.filteredOut && apiData.filteredOut.length > 0
