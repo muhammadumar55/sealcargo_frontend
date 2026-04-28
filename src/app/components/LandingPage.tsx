@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Search, Shield, Globe, TrendingUp, CheckCircle } from "lucide-react";
-import logo from "../../imports/cropped-seal-guatemala.png";
+import logo from "../../imports/ChatGPT_Image_Apr_27,_2026,_10_59_16_AM.png";
 import { useLanguage } from "../context/LanguageContext";
 import { LanguageToggle } from "./LanguageToggle";
 
@@ -26,8 +26,8 @@ export function LandingPage() {
       <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="SEAL" className="h-10" />
-            <span className="text-xl font-bold text-[#0B3C5D]">SmartTrade AI</span>
+            <img src={logo} alt="SEAL" className="h-[85px]" />
+            
           </div>
           <div className="flex items-center gap-3 sm:gap-6">
             <a href="#features" className="hidden sm:block text-slate-600 hover:text-[#0B3C5D] transition-colors">{t("nav.features")}</a>
@@ -232,7 +232,7 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <img src={logo} alt="SEAL" className="h-12 brightness-0 invert drop-shadow-lg" />
+              <img src={logo} alt="SEAL" className="h-[85px] brightness-0 invert drop-shadow-lg" />
               <span className="text-2xl font-bold">SmartTrade AI</span>
             </div>
             <p className="text-blue-200 text-lg">{t("footer.tagline")}</p>
