@@ -1,13 +1,26 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
-import { Package, Ruler, DollarSign, MapPin, ArrowLeft, ArrowRight } from "lucide-react";
+import { useNavigate, useLocation } from "react-router";
+import {
+  Package,
+  Ruler,
+  DollarSign,
+  MapPin,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
 import logo from "../../imports/ChatGPT_Image_Apr_27,_2026,_10_59_16_AM.png";
 import { useLanguage } from "../context/LanguageContext";
 import { LanguageToggle } from "./LanguageToggle";
 
 export function ProductQualification() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
+
+  // Read original search query forwarded from chat/landing
+  const userQuery = location.state?.query || "";
+  const userName = location.state?.name || "";
+  const userEmail = location.state?.email || "";
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -16,7 +29,7 @@ export function ProductQualification() {
     material: "",
     quantity: "",
     budget: "",
-    destination: ""
+    destination: "",
   });
 
   // ── Submit: call backend then navigate ──────────────────────────────────────
@@ -31,8 +44,11 @@ export function ProductQualification() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
+          body: JSON.stringify({
+            ...formData,
+            userQuery, // ← include original query for Grok refinement
+          }),
+        },
       );
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -46,10 +62,11 @@ export function ProductQualification() {
           suppliers, // ← real API data
         },
       });
-
     } catch (err) {
       console.error("API failed:", err);
-      setError("No se pudo conectar al servidor. Mostrando datos de demostración.");
+      setError(
+        "No se pudo conectar al servidor. Mostrando datos de demostración.",
+      );
 
       // Navigate anyway — SupplierResults will show mock data
       navigate("/suppliers", { state: formData });
@@ -67,7 +84,9 @@ export function ProductQualification() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logo} alt="SEAL" className="h-[85px]" />
-            <span className="text-xl font-bold text-[#0B3C5D]">SmartTrade AI</span>
+            <span className="text-xl font-bold text-[#0B3C5D]">
+              SmartTrade AI
+            </span>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -75,7 +94,9 @@ export function ProductQualification() {
               className="text-slate-600 hover:text-[#0B3C5D] flex items-center gap-2 font-medium transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("qualification.back")}</span>
+              <span className="hidden sm:inline">
+                {t("qualification.back")}
+              </span>
             </button>
             <LanguageToggle />
           </div>
@@ -110,7 +131,6 @@ export function ProductQualification() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-
             {/* Step 1 */}
             {step === 1 && (
               <div className="space-y-6 animate-fade-in">
@@ -121,15 +141,27 @@ export function ProductQualification() {
                   </label>
                   <select
                     value={formData.productType}
-                    onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, productType: e.target.value })
+                    }
                     required
                     className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">{t("qualification.selectCategory")}</option>
-                    <option value="furniture">{t("qualification.furniture")}</option>
-                    <option value="electronics">{t("qualification.electronics")}</option>
-                    <option value="textiles">{t("qualification.textiles")}</option>
-                    <option value="machinery">{t("qualification.machinery")}</option>
+                    <option value="">
+                      {t("qualification.selectCategory")}
+                    </option>
+                    <option value="furniture">
+                      {t("qualification.furniture")}
+                    </option>
+                    <option value="electronics">
+                      {t("qualification.electronics")}
+                    </option>
+                    <option value="textiles">
+                      {t("qualification.textiles")}
+                    </option>
+                    <option value="machinery">
+                      {t("qualification.machinery")}
+                    </option>
                     <option value="other">{t("qualification.other")}</option>
                   </select>
                 </div>
@@ -142,7 +174,9 @@ export function ProductQualification() {
                   <input
                     type="text"
                     value={formData.material}
-                    onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, material: e.target.value })
+                    }
                     required
                     placeholder={t("qualification.materialPlaceholder")}
                     className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -162,7 +196,9 @@ export function ProductQualification() {
                   <input
                     type="number"
                     value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, quantity: e.target.value })
+                    }
                     required
                     placeholder="1000"
                     min="1"
@@ -178,7 +214,9 @@ export function ProductQualification() {
                   <input
                     type="number"
                     value={formData.budget}
-                    onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, budget: e.target.value })
+                    }
                     required
                     placeholder="50000"
                     min="1"
@@ -198,11 +236,15 @@ export function ProductQualification() {
                   </label>
                   <select
                     value={formData.destination}
-                    onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, destination: e.target.value })
+                    }
                     required
                     className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">{t("qualification.selectDestination")}</option>
+                    <option value="">
+                      {t("qualification.selectDestination")}
+                    </option>
                     <option value="US">Estados Unidos</option>
                     <option value="GT">Guatemala</option>
                     <option value="MX">México</option>
@@ -218,19 +260,27 @@ export function ProductQualification() {
                   </h3>
                   <div className="space-y-1 text-sm text-slate-600">
                     <p>
-                      <span className="font-medium">{t("qualification.product")}</span>{" "}
+                      <span className="font-medium">
+                        {t("qualification.product")}
+                      </span>{" "}
                       {formData.productType}
                     </p>
                     <p>
-                      <span className="font-medium">{t("qualification.material")}:</span>{" "}
+                      <span className="font-medium">
+                        {t("qualification.material")}:
+                      </span>{" "}
                       {formData.material}
                     </p>
                     <p>
-                      <span className="font-medium">{t("qualification.quantity")}:</span>{" "}
+                      <span className="font-medium">
+                        {t("qualification.quantity")}:
+                      </span>{" "}
                       {formData.quantity} unidades
                     </p>
                     <p>
-                      <span className="font-medium">{t("qualification.budget")}:</span>{" "}
+                      <span className="font-medium">
+                        {t("qualification.budget")}:
+                      </span>{" "}
                       ${formData.budget}
                     </p>
                   </div>
@@ -269,11 +319,24 @@ export function ProductQualification() {
                 >
                   {isLoading ? (
                     <>
-                      <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10"
-                          stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      <svg
+                        className="animate-spin w-5 h-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
                       </svg>
                       Buscando Proveedores...
                     </>
@@ -293,7 +356,6 @@ export function ProductQualification() {
                 ⚠️ {error}
               </div>
             )}
-
           </form>
         </div>
       </div>

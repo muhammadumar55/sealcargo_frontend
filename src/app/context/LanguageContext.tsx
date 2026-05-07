@@ -58,7 +58,7 @@ const translations = {
     "howItWorks.step3.title": "Analiza",
     "howItWorks.step3.desc": "La IA encuentra proveedores y calcula costos",
     "howItWorks.step4.title": "Importa",
-    "howItWorks.step4.desc": "Obtén tu informe completo o deja que SEAL lo maneje",
+    "howItWorks.step4.desc": "Obtén tu informe completo y deja la operación en manos de SEAL",
 
     // Footer
     "footer.tagline": "Conectando Guatemala al Comercio Global",
@@ -155,6 +155,7 @@ const translations = {
     "suppliers.leadNotesPlaceholder": "Agrega notas sobre este lead para tu equipo...",
     "suppliers.saveLead": "Guardar Lead y Enviar Consulta",
     "suppliers.cancel": "Cancelar",
+    "suppliers.callManufacturer": "Llamar al Fabricante",
 
     // Cost Breakdown
     "cost.title": "Análisis de Costo Total Desembarcado",
@@ -398,6 +399,7 @@ const translations = {
     "suppliers.leadNotesPlaceholder": "Add notes about this lead for your team...",
     "suppliers.saveLead": "Save Lead & Send Inquiry",
     "suppliers.cancel": "Cancel",
+    "suppliers.callManufacturer": "Call Manufacturer",
 
     // Cost Breakdown
     "cost.title": "Total Landed Cost Analysis",
