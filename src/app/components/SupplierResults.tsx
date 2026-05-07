@@ -695,15 +695,24 @@ export function SupplierResults() {
                     )}
 
                     {/* Product Images */}
-                    <div
-                      key={i}
-                      className="relative rounded-lg overflow-hidden bg-slate-100 cursor-zoom-in"
-                    >
-                      <img
-                        src={img}
-                        alt={`Product view ${i + 1}`}
-                        className="w-full h-24 object-cover transition-transform duration-200 hover:scale-150 hover:origin-center"
-                      />
+                    {/* Product Images with Zoom */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {images.map((img, i) => (
+                        <div
+                          key={i}
+                          className="rounded-lg overflow-hidden bg-slate-100 group cursor-zoom-in"
+                        >
+                          <img
+                            src={img}
+                            alt={`Product view ${i + 1}`}
+                            className="w-full h-24 object-cover transition-transform duration-300 ease-in-out group-hover:scale-125"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "https://images.unsplash.com/photo-1503602642458-232111445657?w=400&h=300&fit=crop";
+                            }}
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
 
