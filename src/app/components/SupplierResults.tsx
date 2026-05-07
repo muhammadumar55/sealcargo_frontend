@@ -15,6 +15,8 @@ import {
   Zap,
   Award,
   Shield,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import logo from "../../imports/ChatGPT_Image_Apr_27,_2026,_10_59_16_AM.png";
 import { useLanguage } from "../context/LanguageContext";
@@ -334,9 +336,9 @@ function getProductImages(supplier: Supplier): string[] {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function SupplierResults() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { t } = useLanguage();
+  const navigate   = useNavigate();
+  const location   = useLocation();
+  const { t }      = useLanguage();
 
   // ── Resolve suppliers ─────────────────────────────────────────────────────
   const apiData = location.state?.suppliers;
@@ -352,8 +354,8 @@ export function SupplierResults() {
   const isLiveData = !!(apiData?.topSuppliers?.length > 0);
 
   // ── Navigation state for cost breakdown ───────────────────────────────────
-  const navQuantity = location.state?.quantity ?? "1000";
-  const navBudget = location.state?.budget ?? "50000";
+  const navQuantity    = location.state?.quantity    ?? "1000";
+  const navBudget      = location.state?.budget      ?? "50000";
   const navDestination = location.state?.destination ?? "US";
   const navProductType = location.state?.productType ?? "furniture";
 
@@ -361,18 +363,48 @@ export function SupplierResults() {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier>(
     displaySuppliers[0],
   );
-  const [showFiltered, setShowFiltered] = useState(false);
-  const [savedSuppliers, setSavedSuppliers] = useState<number[]>([]);
+  const [showFiltered,    setShowFiltered]    = useState(false);
+  const [savedSuppliers,  setSavedSuppliers]  = useState<number[]>([]);
   const [showContactModal, setShowContactModal] = useState(false);
-  const [leadNotes, setLeadNotes] = useState("");
+  const [leadNotes,       setLeadNotes]       = useState("");
+
+  // ── Lightbox state ────────────────────────────────────────────────────────
+  const [lightboxImages,    setLightboxImages]    = useState<string[]>([]);
+  const [lightboxIndex,     setLightboxIndex]     = useState(0);
+  const [lightboxOpen,      setLightboxOpen]      = useState(false);
+  const [lightboxSupplier,  setLightboxSupplier]  = useState("");
+
+  // ── Lightbox helpers ──────────────────────────────────────────────────────
+  const openLightbox = (images: string[], startIndex: number, supplierName: string) => {
+    setLightboxImages(images);
+    setLightboxIndex(startIndex);
+    setLightboxSupplier(supplierName);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => setLightboxOpen(false);
+
+  const lightboxPrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxIndex((prev) =>
+      prev === 0 ? lightboxImages.length - 1 : prev - 1
+    );
+  };
+
+  const lightboxNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxIndex((prev) =>
+      prev === lightboxImages.length - 1 ? 0 : prev + 1
+    );
+  };
 
   // ── Navigate to costs with selected supplier ──────────────────────────────
   const goToCosts = () => {
     navigate("/costs", {
       state: {
-        supplier: selectedSupplier,
-        quantity: navQuantity,
-        budget: navBudget,
+        supplier:    selectedSupplier,
+        quantity:    navQuantity,
+        budget:      navBudget,
         destination: navDestination,
         productType: navProductType,
       },
@@ -388,36 +420,30 @@ export function SupplierResults() {
 
   const handleContactSupplier = () => {
     console.log("Lead generated:", {
-      supplier: selectedSupplier,
-      notes: leadNotes,
+      supplier:  selectedSupplier,
+      notes:     leadNotes,
       timestamp: new Date().toISOString(),
     });
     setShowContactModal(false);
-    alert(
-      "¡Lead guardado! Nuestro equipo hará seguimiento dentro de 24 horas.",
-    );
+    alert("¡Lead guardado! Nuestro equipo hará seguimiento dentro de 24 horas.");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logo} alt="SEAL" className="h-[85px]" />
-            <span className="text-xl font-bold text-[#0B3C5D]">
-              SmartTrade AI
-            </span>
+            <span className="text-xl font-bold text-[#0B3C5D]">SmartTrade AI</span>
           </div>
           <div className="flex items-center gap-3">
-            {/* ✅ Correct nav button */}
             <button
               onClick={goToCosts}
               className="px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
             >
-              <span className="hidden sm:inline">
-                {t("suppliers.viewCostBreakdown")}
-              </span>
+              <span className="hidden sm:inline">{t("suppliers.viewCostBreakdown")}</span>
               <span className="sm:hidden">Costos</span>
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -427,6 +453,7 @@ export function SupplierResults() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+
         {/* Title */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-[#0B3C5D] mb-2">
@@ -455,44 +482,30 @@ export function SupplierResults() {
           <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="w-5 h-5 text-green-600" />
-              <span className="font-semibold text-green-900">
-                {t("suppliers.qualityFilter")}
-              </span>
+              <span className="font-semibold text-green-900">{t("suppliers.qualityFilter")}</span>
             </div>
-            <p className="text-sm text-green-700">
-              {t("suppliers.qualityDesc")}
-            </p>
+            <p className="text-sm text-green-700">{t("suppliers.qualityDesc")}</p>
           </div>
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-5 h-5 text-blue-600" />
-              <span className="font-semibold text-blue-900">
-                {t("suppliers.trustFilter")}
-              </span>
+              <span className="font-semibold text-blue-900">{t("suppliers.trustFilter")}</span>
             </div>
             <p className="text-sm text-blue-700">{t("suppliers.trustDesc")}</p>
           </div>
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Award className="w-5 h-5 text-purple-600" />
-              <span className="font-semibold text-purple-900">
-                {t("suppliers.experienceFilter")}
-              </span>
+              <span className="font-semibold text-purple-900">{t("suppliers.experienceFilter")}</span>
             </div>
-            <p className="text-sm text-purple-700">
-              {t("suppliers.experienceDesc")}
-            </p>
+            <p className="text-sm text-purple-700">{t("suppliers.experienceDesc")}</p>
           </div>
           <div className="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="w-5 h-5 text-orange-600" />
-              <span className="font-semibold text-orange-900">
-                {t("suppliers.aiScore")}
-              </span>
+              <span className="font-semibold text-orange-900">{t("suppliers.aiScore")}</span>
             </div>
-            <p className="text-sm text-orange-700">
-              {t("suppliers.aiScoreDesc")}
-            </p>
+            <p className="text-sm text-orange-700">{t("suppliers.aiScoreDesc")}</p>
           </div>
         </div>
 
@@ -511,13 +524,9 @@ export function SupplierResults() {
                 >
                   <div>
                     <span className="font-medium text-slate-700">{s.name}</span>
-                    <span className="text-sm text-red-600 ml-3">
-                      ⚠️ {s.reason}
-                    </span>
+                    <span className="text-sm text-red-600 ml-3">⚠️ {s.reason}</span>
                   </div>
-                  <span className="text-xs text-slate-500">
-                    {t("suppliers.notRecommended")}
-                  </span>
+                  <span className="text-xs text-slate-500">{t("suppliers.notRecommended")}</span>
                 </div>
               ))}
             </div>
@@ -526,8 +535,10 @@ export function SupplierResults() {
 
         {/* Main Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* ── Left: Supplier Cards ────────────────────────────────────────── */}
+
+          {/* ── Left: Supplier Cards ──────────────────────────────────────── */}
           <div className="lg:col-span-2 space-y-4">
+
             {/* Sort Bar */}
             <div className="bg-white rounded-lg border border-slate-200 p-4 flex items-center gap-4">
               <Filter className="w-5 h-5 text-slate-400" />
@@ -578,9 +589,7 @@ export function SupplierResults() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-[#0B3C5D]">
-                            {supplier.name}
-                          </h3>
+                          <h3 className="font-semibold text-[#0B3C5D]">{supplier.name}</h3>
                           {supplier.verified && (
                             <CheckCircle className="w-5 h-5 text-green-500" />
                           )}
@@ -589,9 +598,7 @@ export function SupplierResults() {
                         {/* AI Score Bar */}
                         <div className="mb-3">
                           <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-slate-600">
-                              {t("suppliers.matchScore")}
-                            </span>
+                            <span className="text-slate-600">{t("suppliers.matchScore")}</span>
                             <span
                               className={`font-bold ${
                                 supplier.aiScore >= 90
@@ -633,50 +640,31 @@ export function SupplierResults() {
                       {/* Price */}
                       <div className="text-right ml-4">
                         <div className="text-2xl font-bold text-[#0B3C5D]">
-                          $
-                          {typeof supplier.price === "number"
+                          ${typeof supplier.price === "number"
                             ? supplier.price.toFixed(2)
                             : supplier.price}
                         </div>
-                        <div className="text-sm text-slate-600">
-                          {t("suppliers.perUnit")}
-                        </div>
+                        <div className="text-sm text-slate-600">{t("suppliers.perUnit")}</div>
                       </div>
                     </div>
 
                     {/* Stats */}
                     <div className="grid grid-cols-4 gap-3 mb-4">
                       <div className="bg-slate-50 rounded-lg p-3">
-                        <div className="text-xs text-slate-600 mb-1">
-                          {t("suppliers.moq")}
-                        </div>
-                        <div className="font-semibold text-[#0B3C5D] text-sm">
-                          {supplier.moq}
-                        </div>
+                        <div className="text-xs text-slate-600 mb-1">{t("suppliers.moq")}</div>
+                        <div className="font-semibold text-[#0B3C5D] text-sm">{supplier.moq}</div>
                       </div>
                       <div className="bg-slate-50 rounded-lg p-3">
-                        <div className="text-xs text-slate-600 mb-1">
-                          {t("suppliers.experience")}
-                        </div>
-                        <div className="font-semibold text-[#0B3C5D] text-sm">
-                          {supplier.yearsInBusiness}a
-                        </div>
+                        <div className="text-xs text-slate-600 mb-1">{t("suppliers.experience")}</div>
+                        <div className="font-semibold text-[#0B3C5D] text-sm">{supplier.yearsInBusiness}a</div>
                       </div>
                       <div className="bg-slate-50 rounded-lg p-3">
-                        <div className="text-xs text-slate-600 mb-1">
-                          {t("suppliers.response")}
-                        </div>
-                        <div className="font-semibold text-[#0B3C5D] text-sm">
-                          {supplier.responseRate}%
-                        </div>
+                        <div className="text-xs text-slate-600 mb-1">{t("suppliers.response")}</div>
+                        <div className="font-semibold text-[#0B3C5D] text-sm">{supplier.responseRate}%</div>
                       </div>
                       <div className="bg-green-50 rounded-lg p-3">
-                        <div className="text-xs text-green-700 mb-1">
-                          {t("suppliers.quality")}
-                        </div>
-                        <div className="font-semibold text-green-700 text-sm">
-                          {supplier.qualityScore}
-                        </div>
+                        <div className="text-xs text-green-700 mb-1">{t("suppliers.quality")}</div>
+                        <div className="font-semibold text-green-700 text-sm">{supplier.qualityScore}</div>
                       </div>
                     </div>
 
@@ -694,23 +682,32 @@ export function SupplierResults() {
                       </div>
                     )}
 
-                    {/* Product Images */}
-                    {/* Product Images with Zoom */}
+                    {/* ── Product Images — click opens lightbox ─────────── */}
                     <div className="grid grid-cols-3 gap-3">
                       {images.map((img, i) => (
                         <div
                           key={i}
-                          className="rounded-lg overflow-hidden bg-slate-100 group cursor-zoom-in"
+                          className="rounded-lg overflow-hidden bg-slate-100 group cursor-pointer relative"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openLightbox(images, i, supplier.name);
+                          }}
                         >
                           <img
                             src={img}
                             alt={`Product view ${i + 1}`}
-                            className="w-full h-24 object-cover transition-transform duration-300 ease-in-out group-hover:scale-125"
+                            className="w-full h-24 object-cover transition-transform duration-300 ease-in-out group-hover:scale-110"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src =
                                 "https://images.unsplash.com/photo-1503602642458-232111445657?w=400&h=300&fit=crop";
                             }}
                           />
+                          {/* Hover overlay hint */}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                            <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-semibold bg-black/50 px-2 py-1 rounded-full transition-opacity duration-300">
+                              Ver
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -730,16 +727,17 @@ export function SupplierResults() {
                       }`}
                     >
                       <Heart
-                        className={`w-5 h-5 ${savedSuppliers.includes(supplier.id) ? "fill-red-500" : ""}`}
+                        className={`w-5 h-5 ${
+                          savedSuppliers.includes(supplier.id) ? "fill-red-500" : ""
+                        }`}
                       />
                     </button>
                     <div className="flex flex-col items-center gap-1">
                       <span className="text-xs font-medium text-slate-500">
                         {t("suppliers.callManufacturer")}
                       </span>
-
                       <a
-                        href={`tel:${selectedSupplier.contactPhone || "+1234567890"}`}
+                        href={`tel:${supplier.contactPhone || "+1234567890"}`}
                         onClick={(e) => e.stopPropagation()}
                         className="px-4 py-2 rounded-lg border-2 border-slate-300 text-slate-600 hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
                       >
@@ -752,7 +750,7 @@ export function SupplierResults() {
             })}
           </div>
 
-          {/* ── Right: AI Panel ─────────────────────────────────────────────── */}
+          {/* ── Right: AI Panel ──────────────────────────────────────────── */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl border border-slate-200 p-6 sticky top-6">
               <h2 className="font-semibold text-[#0B3C5D] mb-4 flex items-center gap-2">
@@ -767,33 +765,25 @@ export function SupplierResults() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">
-                      {t("suppliers.qualityScore")}
-                    </span>
+                    <span className="text-slate-600">{t("suppliers.qualityScore")}</span>
                     <span className="font-semibold text-green-600">
                       {selectedSupplier.qualityScore}/100
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">
-                      {t("suppliers.reliabilityScore")}
-                    </span>
+                    <span className="text-slate-600">{t("suppliers.reliabilityScore")}</span>
                     <span className="font-semibold text-blue-600">
                       {selectedSupplier.reliabilityScore}/100
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">
-                      {t("suppliers.priceScore")}
-                    </span>
+                    <span className="text-slate-600">{t("suppliers.priceScore")}</span>
                     <span className="font-semibold text-purple-600">
                       {selectedSupplier.priceScore}/100
                     </span>
                   </div>
                   <div className="pt-2 border-t border-blue-300 flex items-center justify-between">
-                    <span className="font-semibold text-[#0B3C5D]">
-                      {t("suppliers.overallScore")}
-                    </span>
+                    <span className="font-semibold text-[#0B3C5D]">{t("suppliers.overallScore")}</span>
                     <span className="text-2xl font-bold text-[#0B3C5D]">
                       {selectedSupplier.aiScore}
                     </span>
@@ -807,12 +797,9 @@ export function SupplierResults() {
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-medium text-green-900 mb-1">
-                        {t("suppliers.bestValue")}
-                      </div>
+                      <div className="font-medium text-green-900 mb-1">{t("suppliers.bestValue")}</div>
                       <div className="text-sm text-green-700">
-                        {displaySuppliers[0]?.name}{" "}
-                        {t("suppliers.bestValueDesc")}
+                        {displaySuppliers[0]?.name} {t("suppliers.bestValueDesc")}
                       </div>
                     </div>
                   </div>
@@ -822,12 +809,8 @@ export function SupplierResults() {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-medium text-yellow-900 mb-1">
-                        {t("suppliers.priceAlert")}
-                      </div>
-                      <div className="text-sm text-yellow-700">
-                        {t("suppliers.priceAlertDesc")}
-                      </div>
+                      <div className="font-medium text-yellow-900 mb-1">{t("suppliers.priceAlert")}</div>
+                      <div className="text-sm text-yellow-700">{t("suppliers.priceAlertDesc")}</div>
                     </div>
                   </div>
                 </div>
@@ -835,17 +818,12 @@ export function SupplierResults() {
 
               {/* Cost Estimate */}
               <div className="pt-4 border-t border-slate-200 mb-6">
-                <h3 className="font-medium text-[#0B3C5D] mb-3">
-                  {t("suppliers.selectedSupplier")}
-                </h3>
+                <h3 className="font-medium text-[#0B3C5D] mb-3">{t("suppliers.selectedSupplier")}</h3>
                 <div className="text-sm text-slate-600 space-y-2">
                   <div className="flex items-center justify-between">
                     <span>{t("suppliers.baseCost")}</span>
                     <span className="font-medium">
-                      $
-                      {(
-                        selectedSupplier.price * parseInt(navQuantity || "1000")
-                      ).toLocaleString()}
+                      ${(selectedSupplier.price * parseInt(navQuantity || "1000")).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -859,23 +837,16 @@ export function SupplierResults() {
                   <div className="flex items-center justify-between pt-2 border-t border-slate-200 font-semibold text-[#0B3C5D]">
                     <span>{t("suppliers.totalEstimate")}</span>
                     <span>
-                      $
-                      {(
-                        selectedSupplier.price *
-                          parseInt(navQuantity || "1000") +
+                      ${(
+                        selectedSupplier.price * parseInt(navQuantity || "1000") +
                         4000 +
-                        Math.round(
-                          selectedSupplier.price *
-                            parseInt(navQuantity || "1000") *
-                            0.06,
-                        )
+                        Math.round(selectedSupplier.price * parseInt(navQuantity || "1000") * 0.06)
                       ).toLocaleString()}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* ✅ Correct panel button */}
               <button
                 onClick={goToCosts}
                 className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-lg hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center justify-center gap-2"
@@ -899,12 +870,8 @@ export function SupplierResults() {
                           key={s.id}
                           className="text-sm p-2 bg-slate-50 rounded flex items-center justify-between"
                         >
-                          <span className="text-slate-700 truncate">
-                            {s.name.split(" ")[0]}
-                          </span>
-                          <span className="text-xs text-green-600 font-semibold">
-                            {s.aiScore}
-                          </span>
+                          <span className="text-slate-700 truncate">{s.name.split(" ")[0]}</span>
+                          <span className="text-xs text-green-600 font-semibold">{s.aiScore}</span>
                         </div>
                       ))}
                   </div>
@@ -918,7 +885,7 @@ export function SupplierResults() {
         </div>
       </div>
 
-      {/* Contact Modal */}
+      {/* ── Contact Modal ─────────────────────────────────────────────────────── */}
       {showContactModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
@@ -935,19 +902,15 @@ export function SupplierResults() {
             </div>
             <div className="mb-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <div className="font-semibold text-[#0B3C5D] mb-2">
-                  {selectedSupplier.name}
-                </div>
+                <div className="font-semibold text-[#0B3C5D] mb-2">{selectedSupplier.name}</div>
                 <div className="text-sm text-slate-600 space-y-1">
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {selectedSupplier.contactEmail ||
-                      "Contactar via plataforma"}
+                    {selectedSupplier.contactEmail || "Contactar via plataforma"}
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4" />
-                    {selectedSupplier.contactPhone ||
-                      "Contactar via plataforma"}
+                    {selectedSupplier.contactPhone || "Contactar via plataforma"}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <Award className="w-4 h-4 text-green-600" />
@@ -986,6 +949,98 @@ export function SupplierResults() {
           </div>
         </div>
       )}
+
+      {/* ── Lightbox Modal ────────────────────────────────────────────────────── */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+          onClick={closeLightbox}
+        >
+          {/* Close Button */}
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 w-11 h-11 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-all z-10 shadow-lg"
+          >
+            <X className="w-6 h-6" />
+          </button>
+
+          {/* Image counter */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 text-white text-sm px-4 py-1.5 rounded-full z-10">
+            {lightboxIndex + 1} / {lightboxImages.length}
+          </div>
+
+          {/* Prev Button */}
+          {lightboxImages.length > 1 && (
+            <button
+              onClick={lightboxPrev}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-all z-10 shadow-lg"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+
+          {/* Next Button */}
+          {lightboxImages.length > 1 && (
+            <button
+              onClick={lightboxNext}
+              className="absolute right-16 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-all z-10 shadow-lg"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          )}
+
+          {/* Main Image */}
+          <div
+            className="relative max-w-4xl max-h-[85vh] w-full flex flex-col items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={lightboxImages[lightboxIndex]}
+              alt={`${lightboxSupplier} - Image ${lightboxIndex + 1}`}
+              className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  "https://images.unsplash.com/photo-1503602642458-232111445657?w=800&h=600&fit=crop";
+              }}
+            />
+
+            {/* Caption */}
+            <div className="mt-4 text-center">
+              <p className="text-white font-semibold text-lg">{lightboxSupplier}</p>
+              <p className="text-white/60 text-sm mt-1">
+                Imagen {lightboxIndex + 1} de {lightboxImages.length} • Click fuera para cerrar
+              </p>
+            </div>
+
+            {/* Thumbnail strip */}
+            {lightboxImages.length > 1 && (
+              <div className="flex gap-3 mt-4">
+                {lightboxImages.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightboxIndex(i);
+                    }}
+                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      i === lightboxIndex
+                        ? "border-white scale-110 shadow-lg"
+                        : "border-white/30 opacity-60 hover:opacity-100"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`Thumbnail ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
