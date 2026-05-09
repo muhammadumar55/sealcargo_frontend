@@ -30,6 +30,10 @@ const SHIPPING_COSTS: Record<string, number> = {
   other: 5000,
 };
 
+// ✅ Client-specified rates
+const VAT_RATE       = 0.12;  // IVA 12%
+const INSURANCE_RATE = 0.01;  // Seguro 1%
+
 // ─── Calculate all costs ──────────────────────────────────────────────────────
 function calculateCosts(
   price: number,
@@ -41,8 +45,8 @@ function calculateCosts(
   const shipping     = SHIPPING_COSTS[destination] || 4200;
   const dutyRate     = DUTY_RATES[productType] || 0.06;
   const importDuties = Math.round(productCost * dutyRate);
-  const taxes        = Math.round((productCost + importDuties) * 0.015);
-  const insurance    = Math.round(productCost * 0.009);
+  const taxes        = Math.round((productCost + importDuties) * VAT_RATE);       // IVA 12%
+  const insurance    = Math.round(productCost * INSURANCE_RATE);                  // Seguro 1%
   const totalCost    = productCost + shipping + importDuties + taxes + insurance;
 
   return {
@@ -57,7 +61,7 @@ function calculateCosts(
   };
 }
 
-// ─── PDF Export (works with jspdf 2.x AND 4.x) ───────────────────────────────
+// ─── PDF Export ───────────────────────────────────────────────────────────────
 function exportToPDF(
   costs: ReturnType<typeof calculateCosts>,
   supplierName: string,
@@ -72,11 +76,9 @@ function exportToPDF(
     year: "numeric", month: "long", day: "numeric",
   });
 
-  // Header background
+  // Header
   doc.setFillColor(11, 60, 93);
   doc.rect(0, 0, pageWidth, 40, "F");
-
-  // Title
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
@@ -131,13 +133,13 @@ function exportToPDF(
       ],
       [
         "IVA & Impuestos",
-        "Regulaciones del país destino",
+        `IVA ${(VAT_RATE * 100).toFixed(0)}% sobre producto + aranceles`,
         `$${costs.taxes.toLocaleString()}`,
         `${((costs.taxes / costs.totalCost) * 100).toFixed(1)}%`,
       ],
       [
         "Seguro de Carga",
-        "Cobertura completa (0.9% del valor)",
+        `Cobertura completa (${(INSURANCE_RATE * 100).toFixed(0)}% del valor)`,
         `$${costs.insurance.toLocaleString()}`,
         `${((costs.insurance / costs.totalCost) * 100).toFixed(1)}%`,
       ],
@@ -185,7 +187,7 @@ function exportToPDF(
   );
 }
 
-// ─── Excel Export (pure CSV-based, no vulnerable library needed) ──────────────
+// ─── Excel Export (CSV) ───────────────────────────────────────────────────────
 function exportToExcel(
   costs: ReturnType<typeof calculateCosts>,
   supplierName: string,
@@ -196,7 +198,6 @@ function exportToExcel(
 ) {
   const now = new Date().toLocaleDateString("es-ES");
 
-  // Build CSV content
   const rows = [
     ["SEAL SmartTrade AI - Análisis de Costos de Importación"],
     [`Generado:,${now}`],
@@ -229,13 +230,13 @@ function exportToExcel(
     ].join(","),
     [
       "IVA & Impuestos",
-      "Regulaciones del país destino",
+      `IVA ${(VAT_RATE * 100).toFixed(0)}% sobre producto + aranceles`,
       costs.taxes,
       `${((costs.taxes / costs.totalCost) * 100).toFixed(1)}%`,
     ].join(","),
     [
       "Seguro de Carga",
-      "Cobertura completa (0.9%)",
+      `Cobertura completa (${(INSURANCE_RATE * 100).toFixed(0)}%)`,
       costs.insurance,
       `${((costs.insurance / costs.totalCost) * 100).toFixed(1)}%`,
     ].join(","),
@@ -250,7 +251,6 @@ function exportToExcel(
     .map(row => (Array.isArray(row) ? row.join(",") : row))
     .join("\n");
 
-  // Add BOM for Excel to read UTF-8 correctly (Spanish characters)
   const BOM     = "\uFEFF";
   const blob    = new Blob([BOM + csvContent], {
     type: "text/csv;charset=utf-8;",
@@ -327,13 +327,13 @@ export function CostBreakdown() {
     {
       icon: TrendingUp, labelKey: "cost.vatTaxes",
       amount:  costs.taxes,
-      details: "Basado en regulaciones del país de destino",
+      details: `IVA ${(VAT_RATE * 100).toFixed(0)}% sobre producto + aranceles`,
       color:   "green",
     },
     {
       icon: AlertCircle, labelKey: "cost.insurance",
       amount:  costs.insurance,
-      details: "Seguro de carga • Cobertura completa • 0.9% del valor",
+      details: `Seguro de carga • Cobertura completa • ${(INSURANCE_RATE * 100).toFixed(0)}% del valor`,
       color:   "orange",
     },
   ];
@@ -356,7 +356,6 @@ export function CostBreakdown() {
               ← Proveedores
             </button>
 
-            {/* Export PDF */}
             <button
               onClick={() =>
                 exportToPDF(costs, supplierName, quantity, price, destination, productType)
@@ -367,7 +366,6 @@ export function CostBreakdown() {
               {t("cost.exportPDF")}
             </button>
 
-            {/* Export Excel (CSV) */}
             <button
               onClick={() =>
                 exportToExcel(costs, supplierName, quantity, price, destination, productType)
@@ -404,9 +402,7 @@ export function CostBreakdown() {
 
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0B3C5D] mb-2">
-            {t("cost.title")}
-          </h1>
+          <h1 className="text-3xl font-bold text-[#0B3C5D] mb-2">{t("cost.title")}</h1>
           <p className="text-slate-600">
             {t("cost.subtitle")}{" "}
             <span className="font-semibold text-[#0B3C5D]">{supplierName}</span>
