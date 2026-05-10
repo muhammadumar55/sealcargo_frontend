@@ -44,7 +44,6 @@ function generateReportPDF(data: {
   const pageWidth = doc.internal.pageSize.getWidth();
   const now = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
 
-  // Header
   doc.setFillColor(11, 60, 93);
   doc.rect(0, 0, pageWidth, 40, "F");
   doc.setTextColor(255, 255, 255);
@@ -56,7 +55,6 @@ function generateReportPDF(data: {
   doc.text("Informe Completo de Análisis de Importación", 14, 26);
   doc.text(`Generado: ${now}  |  ID: ${data.reportId}`, 14, 34);
 
-  // Order details
   doc.setTextColor(11, 60, 93);
   doc.setFillColor(239, 246, 255);
   doc.rect(14, 48, pageWidth - 28, 32, "F");
@@ -69,7 +67,6 @@ function generateReportPDF(data: {
   doc.text(`Producto: ${data.productType}  |  Destino: ${data.destination}`, 18, 72);
   doc.text(`Cantidad: ${data.quantity.toLocaleString()} uds  |  Precio: $${Number(data.price).toFixed(2)}/u`, 18, 78);
 
-  // Cost section
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("Desglose de Costos", 14, 92);
@@ -91,7 +88,6 @@ function generateReportPDF(data: {
     styles: { fontSize: 9 },
   });
 
-  // Risk section
   const finalY1 = (doc as any).lastAutoTable.finalY + 10;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
@@ -110,7 +106,6 @@ function generateReportPDF(data: {
   doc.setFont("helvetica", "bold");
   doc.text(`Nivel de Riesgo: ${riskLevel}  (${data.riskScore}/100)`, pageWidth / 2, finalY1 + 17, { align: "center" });
 
-  // Per unit summary
   const finalY2 = finalY1 + 36;
   doc.setFillColor(11, 60, 93);
   doc.rect(14, finalY2, pageWidth - 28, 18, "F");
@@ -122,7 +117,6 @@ function generateReportPDF(data: {
     pageWidth / 2, finalY2 + 11, { align: "center" }
   );
 
-  // Footer
   const pageHeight = doc.internal.pageSize.getHeight();
   doc.setTextColor(150, 150, 150);
   doc.setFontSize(8);
@@ -136,7 +130,7 @@ function generateReportPDF(data: {
     doc.save(`SEAL_FullReport_${data.supplierName.replace(/\s+/g, "_")}_${Date.now()}.pdf`);
   }
 
-  return doc.output("datauristring").split(",")[1]; // base64 only
+  return doc.output("datauristring").split(",")[1];
 }
 
 // ─── Excel/CSV Export ────────────────────────────────────────────────────────
@@ -186,12 +180,12 @@ export function FinalCTA() {
   const { t }    = useLanguage();
 
   // ── Read state ────────────────────────────────────────────────────────────
-  const stateSupplier    = location.state?.supplier    ?? null;
-  const stateQuantity    = location.state?.quantity    ?? "1000";
-  const stateBudget      = location.state?.budget      ?? "50000";
-  const stateDestination = location.state?.destination ?? "US";
-  const stateProductType = location.state?.productType ?? "furniture";
-  const stateRiskScore   = location.state?.riskScore   ?? 32;
+  const stateSupplier      = location.state?.supplier      ?? null;
+  const stateQuantity      = location.state?.quantity      ?? "1000";
+  const stateBudget        = location.state?.budget        ?? "50000";
+  const stateDestination   = location.state?.destination   ?? "US";
+  const stateProductType   = location.state?.productType   ?? "furniture";
+  const stateRiskScore     = location.state?.riskScore     ?? 32;
   const stateSuppliersData = location.state?.suppliersData ?? null;
 
   const quantity    = parseInt(String(stateQuantity)) || 1000;
@@ -206,20 +200,20 @@ export function FinalCTA() {
 
   // ── Dynamic stats ─────────────────────────────────────────────────────────
   const leadStats = {
-    totalAnalyzed: stateSuppliersData?.totalCount      ?? 15,
+    totalAnalyzed: stateSuppliersData?.totalCount       ?? 15,
     filtered:      stateSuppliersData?.filteredOutCount ?? 5,
-    qualified:     stateSuppliersData?.qualifiedCount  ?? 9,
+    qualified:     stateSuppliersData?.qualifiedCount   ?? 9,
     topPicks:      3,
   };
 
   // ── Risk display ──────────────────────────────────────────────────────────
-  const riskLevel = stateRiskScore < 40 ? "BAJO" : stateRiskScore < 70 ? "MEDIO" : "ALTO";
+  const riskLevel = stateRiskScore < 40 ? t("risk.low") : stateRiskScore < 70 ? t("risk.medium") : t("risk.high");
   const riskColor = stateRiskScore < 40 ? "text-green-600" : stateRiskScore < 70 ? "text-yellow-600" : "text-red-600";
 
   // ── Modal state ───────────────────────────────────────────────────────────
-  const [showQuoteModal,  setShowQuoteModal]  = useState(false);
-  const [showEmailModal,  setShowEmailModal]  = useState(false);
-  const [submitting,      setSubmitting]      = useState(false);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [submitting,     setSubmitting]     = useState(false);
 
   // Quote form
   const [quoteName,    setQuoteName]    = useState("");
@@ -229,18 +223,18 @@ export function FinalCTA() {
   const [quoteMessage, setQuoteMessage] = useState("");
 
   // Email form
-  const [emailRecipient, setEmailRecipient] = useState("");
+  const [emailRecipient,     setEmailRecipient]     = useState("");
   const [emailRecipientName, setEmailRecipientName] = useState("");
 
   const reportId = `SEAL-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
 
   const reportSections = [
-    { name: "Resumen Ejecutivo",                                pages: 2 },
-    { name: `Análisis de Proveedores (${leadStats.qualified} Vendedores)`, pages: 8 },
-    { name: "Desglose y Comparación de Costos",                 pages: 4 },
-    { name: "Evaluación de Riesgos y Cumplimiento",             pages: 6 },
-    { name: "Plan de Envío y Logística",                        pages: 3 },
-    { name: "Lista de Verificación de Documentación",           pages: 2 },
+    { name: t("final.section1"), pages: 2 },
+    { name: `${t("final.section2Prefix")} (${leadStats.qualified} ${t("final.section2Suffix")})`, pages: 8 },
+    { name: t("final.section3"), pages: 4 },
+    { name: t("final.section4"), pages: 6 },
+    { name: t("final.section5"), pages: 3 },
+    { name: t("final.section6"), pages: 2 },
   ];
 
   // ── Action: Download Full Report ──────────────────────────────────────────
@@ -258,8 +252,7 @@ export function FinalCTA() {
 
   // ── Action: Schedule Call ─────────────────────────────────────────────────
   const handleScheduleCall = () => {
-    // Open phone dialer with admin's number (configure in env)
-    const adminPhone = "+50212345678"; // ← Replace with real admin phone
+    const adminPhone = "+50212345678";
     window.location.href = `tel:${adminPhone}`;
   };
 
@@ -274,22 +267,22 @@ export function FinalCTA() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name:         quoteName,
-            email:        quoteEmail,
-            phone:        quotePhone,
-            company:      quoteCompany,
-            message:      quoteMessage,
+            name:    quoteName,
+            email:   quoteEmail,
+            phone:   quotePhone,
+            company: quoteCompany,
+            message: quoteMessage,
             supplierName, totalCost: costs.totalCost,
             productType,  quantity, destination,
           }),
         }
       );
       if (!res.ok) throw new Error("Failed");
-      alert("¡Solicitud enviada con éxito! Nuestro equipo te contactará pronto.");
+      alert(t("final.quoteSuccess"));
       setShowQuoteModal(false);
       setQuoteName(""); setQuoteEmail(""); setQuotePhone(""); setQuoteCompany(""); setQuoteMessage("");
     } catch (err) {
-      alert("⚠️ No se pudo enviar. Por favor intenta de nuevo o contáctanos directamente.");
+      alert(t("final.quoteError"));
     } finally {
       setSubmitting(false);
     }
@@ -300,7 +293,6 @@ export function FinalCTA() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      // Generate PDF as base64
       const pdfBase64 = generateReportPDF({
         supplierName, quantity, price, destination, productType,
         riskScore: stateRiskScore, costs, reportId, saveFile: false,
@@ -321,11 +313,11 @@ export function FinalCTA() {
         }
       );
       if (!res.ok) throw new Error("Failed");
-      alert("✅ ¡Informe enviado a tu correo!");
+      alert(t("final.emailSuccess"));
       setShowEmailModal(false);
       setEmailRecipient(""); setEmailRecipientName("");
     } catch (err) {
-      alert("⚠️ No se pudo enviar el informe. Por favor intenta de nuevo.");
+      alert(t("final.emailError"));
     } finally {
       setSubmitting(false);
     }
@@ -365,11 +357,11 @@ export function FinalCTA() {
           <p className="text-xs mt-2">
             {isLiveData ? (
               <span className="text-green-600 font-medium">
-                ✅ Análisis basado en proveedor real: {supplierName}
+                ✅ {t("final.basedOnReal")} {supplierName}
               </span>
             ) : (
               <span className="text-yellow-600 font-medium">
-                ⚠️ Mostrando datos de ejemplo
+                ⚠️ {t("final.demoData")}
               </span>
             )}
           </p>
@@ -421,7 +413,7 @@ export function FinalCTA() {
               </div>
               <div className="flex items-center gap-1 text-sm text-blue-700">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                {stateSupplier?.rating ?? 4.9} • {stateSupplier?.verified ? "Verificado" : "Estándar"}
+                {stateSupplier?.rating ?? 4.9} • {stateSupplier?.verified ? t("final.verified") : t("final.standard")}
               </div>
             </div>
 
@@ -430,7 +422,7 @@ export function FinalCTA() {
               <div className="font-bold text-xl text-[#0B3C5D] mb-1">
                 ${costs.totalCost.toLocaleString()}
               </div>
-              <div className="text-sm text-green-700">${costs.perUnit} por unidad</div>
+              <div className="text-sm text-green-700">${costs.perUnit} {t("final.perUnit")}</div>
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
@@ -450,13 +442,13 @@ export function FinalCTA() {
                     <CheckCircle className="w-5 h-5 text-green-500" />
                     <span className="font-medium text-slate-700">{section.name}</span>
                   </div>
-                  <span className="text-sm text-slate-600">{section.pages} páginas</span>
+                  <span className="text-sm text-slate-600">{section.pages} {t("final.pages")}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ✅ Single Download Button (Export Leads removed) */}
+          {/* Single Download Button */}
           <button
             onClick={handleDownloadReport}
             className="w-full py-4 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center justify-center gap-3 font-semibold shadow-lg hover:shadow-xl"
@@ -567,7 +559,7 @@ export function FinalCTA() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#0B3C5D]">Solicitar Cotización</h2>
+              <h2 className="text-2xl font-bold text-[#0B3C5D]">{t("final.quoteModalTitle")}</h2>
               <button onClick={() => setShowQuoteModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-6 h-6" />
               </button>
@@ -576,30 +568,30 @@ export function FinalCTA() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-5 text-sm">
               <p className="font-semibold text-[#0B3C5D]">{supplierName}</p>
               <p className="text-slate-600 mt-1">
-                {quantity.toLocaleString()} unidades • Total estimado: ${costs.totalCost.toLocaleString()}
+                {quantity.toLocaleString()} {t("final.quoteUnits")} ${costs.totalCost.toLocaleString()}
               </p>
             </div>
 
             <form onSubmit={handleQuoteSubmit} className="space-y-4">
-              <input type="text" required placeholder="Nombre completo *" value={quoteName}
+              <input type="text" required placeholder={t("final.quoteFullName")} value={quoteName}
                 onChange={(e) => setQuoteName(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="email" required placeholder="Email *" value={quoteEmail}
+              <input type="email" required placeholder={t("final.quoteEmail")} value={quoteEmail}
                 onChange={(e) => setQuoteEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="tel" placeholder="Teléfono" value={quotePhone}
+              <input type="tel" placeholder={t("final.quotePhone")} value={quotePhone}
                 onChange={(e) => setQuotePhone(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="text" placeholder="Empresa" value={quoteCompany}
+              <input type="text" placeholder={t("final.quoteCompany")} value={quoteCompany}
                 onChange={(e) => setQuoteCompany(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <textarea placeholder="Mensaje adicional (opcional)" value={quoteMessage}
+              <textarea placeholder={t("final.quoteMessage")} value={quoteMessage}
                 onChange={(e) => setQuoteMessage(e.target.value)} rows={4}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
 
               <button type="submit" disabled={submitting}
                 className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-lg hover:from-blue-700 hover:to-[#0a2f47] transition-all font-semibold disabled:opacity-60">
-                {submitting ? "Enviando..." : "Enviar Solicitud"}
+                {submitting ? t("final.quoteSending") : t("final.quoteSubmit")}
               </button>
             </form>
           </div>
@@ -611,28 +603,26 @@ export function FinalCTA() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#0B3C5D]">Enviar Informe por Email</h2>
+              <h2 className="text-2xl font-bold text-[#0B3C5D]">{t("final.emailModalTitle")}</h2>
               <button onClick={() => setShowEmailModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <p className="text-sm text-slate-600 mb-5">
-              Te enviaremos el informe completo en PDF a tu correo.
-            </p>
+            <p className="text-sm text-slate-600 mb-5">{t("final.emailModalDesc")}</p>
 
             <form onSubmit={handleEmailReport} className="space-y-4">
-              <input type="text" placeholder="Tu nombre" value={emailRecipientName}
+              <input type="text" placeholder={t("final.emailYourName")} value={emailRecipientName}
                 onChange={(e) => setEmailRecipientName(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="email" required placeholder="tu@email.com *" value={emailRecipient}
+              <input type="email" required placeholder={t("final.emailYourEmail")} value={emailRecipient}
                 onChange={(e) => setEmailRecipient(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
 
               <button type="submit" disabled={submitting}
                 className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-lg hover:from-blue-700 hover:to-[#0a2f47] transition-all font-semibold disabled:opacity-60 flex items-center justify-center gap-2">
                 <Mail className="w-5 h-5" />
-                {submitting ? "Enviando..." : "Enviar Informe"}
+                {submitting ? t("final.emailSending") : t("final.emailSubmit")}
               </button>
             </form>
           </div>

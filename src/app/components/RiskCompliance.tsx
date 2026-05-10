@@ -45,80 +45,32 @@ function getDocuments(destination: string): Document[] {
 
   if (destination === "US") {
     base.push(
-      {
-        name: "Declaración de Aduana CBP 7501",
-        status: "required",
-        completed: false,
-      },
-      {
-        name: "Certificado CARB (si aplica)",
-        status: "recommended",
-        completed: false,
-      },
-      { name: "Licencia de Importación", status: "optional", completed: false },
+      { name: "Declaración de Aduana CBP 7501",  status: "required",    completed: false },
+      { name: "Certificado CARB (si aplica)",    status: "recommended", completed: false },
+      { name: "Licencia de Importación",         status: "optional",    completed: false },
     );
   } else if (destination === "GT") {
     base.push(
-      {
-        name: "Declaración Aduanera SAT",
-        status: "required",
-        completed: false,
-      },
-      {
-        name: "Certificado Fitosanitario",
-        status: "recommended",
-        completed: false,
-      },
-      {
-        name: "Registro de Importador SAT",
-        status: "required",
-        completed: false,
-      },
+      { name: "Declaración Aduanera SAT",        status: "required",    completed: false },
+      { name: "Certificado Fitosanitario",        status: "recommended", completed: false },
+      { name: "Registro de Importador SAT",       status: "required",    completed: false },
     );
   } else if (destination === "MX") {
     base.push(
-      {
-        name: "Pedimento de Importación",
-        status: "required",
-        completed: false,
-      },
-      {
-        name: "Certificado de Origen TMEC",
-        status: "recommended",
-        completed: false,
-      },
-      { name: "NOM Certificación", status: "optional", completed: false },
+      { name: "Pedimento de Importación",        status: "required",    completed: false },
+      { name: "Certificado de Origen TMEC",      status: "recommended", completed: false },
+      { name: "NOM Certificación",               status: "optional",    completed: false },
     );
   } else if (destination === "CA") {
     base.push(
-      {
-        name: "Formulario B3 Aduanas Canadá",
-        status: "required",
-        completed: false,
-      },
-      {
-        name: "Certificado de Origen CUSMA",
-        status: "recommended",
-        completed: false,
-      },
-      {
-        name: "Licencia de Importación CFIA",
-        status: "optional",
-        completed: false,
-      },
+      { name: "Formulario B3 Aduanas Canadá",    status: "required",    completed: false },
+      { name: "Certificado de Origen CUSMA",     status: "recommended", completed: false },
+      { name: "Licencia de Importación CFIA",    status: "optional",    completed: false },
     );
   } else {
     base.push(
-      {
-        name: "Documentos Aduaneros Locales",
-        status: "required",
-        completed: false,
-      },
-      {
-        name: "Certificado Fitosanitario",
-        status: "recommended",
-        completed: false,
-      },
+      { name: "Documentos Aduaneros Locales",    status: "required",    completed: false },
+      { name: "Certificado Fitosanitario",        status: "recommended", completed: false },
     );
   }
 
@@ -132,46 +84,39 @@ function getWarnings(
 ): Warning[] {
   const warnings: Warning[] = [];
 
-  // Price warning based on supplier score
   if (supplier?.priceScore && supplier.priceScore > 80) {
     warnings.push({
       type: "pricing",
       severity: "medium",
       title: "Variación de Precio Detectada",
       description: `El precio del proveedor ($${supplier.price}/unidad) es competitivo. Verificar calidad antes de pedido masivo.`,
-      recommendation:
-        "Ordenar unidades de muestra y realizar inspección de calidad",
+      recommendation: "Ordenar unidades de muestra y realizar inspección de calidad",
     });
   } else {
     warnings.push({
       type: "pricing",
       severity: "low",
       title: "Precio en Rango de Mercado",
-      description:
-        "El precio del proveedor está dentro del rango normal de mercado para este tipo de producto.",
+      description: "El precio del proveedor está dentro del rango normal de mercado para este tipo de producto.",
       recommendation: "Solicitar muestras antes de confirmar pedido grande",
     });
   }
 
-  // Product-specific warnings
   if (productType === "furniture") {
     if (destination === "US") {
       warnings.push({
         type: "compliance",
         severity: "medium",
         title: "Prueba de Formaldehído Requerida",
-        description:
-          "Los muebles de madera deben cumplir con los estándares CARB de emisión de formaldehído para importación a EE.UU.",
-        recommendation:
-          "Solicitar certificación CARB Phase 2 o informe de prueba de terceros",
+        description: "Los muebles de madera deben cumplir con los estándares CARB de emisión de formaldehído para importación a EE.UU.",
+        recommendation: "Solicitar certificación CARB Phase 2 o informe de prueba de terceros",
       });
     }
     warnings.push({
       type: "customs",
       severity: "medium",
       title: "Clasificación de Código HS",
-      description:
-        "Verificar el código HS correcto para muebles (9401.xx para sillas, 9403.xx para otros muebles) para evitar retrasos aduaneros.",
+      description: "Verificar el código HS correcto para muebles (9401.xx para sillas, 9403.xx para otros muebles) para evitar retrasos aduaneros.",
       recommendation: "Confirmar código HS con agente aduanero antes del envío",
     });
   } else if (productType === "electronics") {
@@ -179,35 +124,29 @@ function getWarnings(
       type: "compliance",
       severity: "high",
       title: "Certificación FCC Requerida",
-      description:
-        "Los dispositivos electrónicos importados a EE.UU. requieren certificación FCC obligatoria.",
+      description: "Los dispositivos electrónicos importados a EE.UU. requieren certificación FCC obligatoria.",
       recommendation: "Obtener certificación FCC antes de importar",
     });
     warnings.push({
       type: "customs",
       severity: "medium",
       title: "Revisión de Sanciones",
-      description:
-        "Verificar que los componentes no provengan de entidades en lista de sanciones.",
-      recommendation:
-        "Solicitar declaración de origen de componentes al proveedor",
+      description: "Verificar que los componentes no provengan de entidades en lista de sanciones.",
+      recommendation: "Solicitar declaración de origen de componentes al proveedor",
     });
   } else if (productType === "textiles") {
     warnings.push({
       type: "compliance",
       severity: "medium",
       title: "Etiquetado de Contenido de Fibra",
-      description:
-        "Los textiles importados deben cumplir con requisitos de etiquetado de contenido de fibra.",
-      recommendation:
-        "Verificar que el proveedor incluya etiquetas con composición correcta",
+      description: "Los textiles importados deben cumplir con requisitos de etiquetado de contenido de fibra.",
+      recommendation: "Verificar que el proveedor incluya etiquetas con composición correcta",
     });
     warnings.push({
       type: "customs",
       severity: "low",
       title: "Cuotas de Importación de Textiles",
-      description:
-        "Verificar que el volumen de importación no exceda cuotas aplicables para la categoría de textil.",
+      description: "Verificar que el volumen de importación no exceda cuotas aplicables para la categoría de textil.",
       recommendation: "Consultar con agente aduanero sobre cuotas vigentes",
     });
   } else {
@@ -215,21 +154,17 @@ function getWarnings(
       type: "customs",
       severity: "low",
       title: "Documentación Estándar Requerida",
-      description:
-        "Asegurar que toda la documentación estándar de importación esté completa y correcta.",
-      recommendation:
-        "Trabajar con un agente aduanero certificado para el despacho",
+      description: "Asegurar que toda la documentación estándar de importación esté completa y correcta.",
+      recommendation: "Trabajar con un agente aduanero certificado para el despacho",
     });
   }
 
-  // Destination-specific
   if (destination === "GT") {
     warnings.push({
       type: "customs",
       severity: "low",
       title: "Registro SAT de Guatemala",
-      description:
-        "Asegúrate de estar registrado como importador en el SAT de Guatemala antes de recibir el envío.",
+      description: "Asegúrate de estar registrado como importador en el SAT de Guatemala antes de recibir el envío.",
       recommendation: "Verificar registro de importador con el SAT",
     });
   }
@@ -239,64 +174,28 @@ function getWarnings(
 
 function getComplianceChecks(supplier: any): ComplianceCheck[] {
   return [
-    {
-      item: "Verificación de proveedor completada",
-      passed: !!supplier,
-    },
-    {
-      item: "Capacidad de exportación confirmada",
-      passed:
-        supplier?.tags?.includes("Gold Supplier") ||
-        supplier?.tags?.includes("Trade Assurance") ||
-        false,
-    },
-    {
-      item: "Garantía comercial disponible",
-      passed:
-        supplier?.tradeAssurance ||
-        supplier?.tags?.includes("Trade Assurance") ||
-        false,
-    },
-    {
-      item: "Proveedor verificado/evaluado",
-      passed:
-        supplier?.verified || supplier?.tags?.includes("Assessed") || false,
-    },
-    {
-      item: "Certificación de producto revisada",
-      passed: false,
-    },
-    {
-      item: "Auditoría de fábrica realizada",
-      passed: supplier?.tags?.includes("Audited") || false,
-    },
+    { item: "Verificación de proveedor completada",       passed: !!supplier },
+    { item: "Capacidad de exportación confirmada",        passed: supplier?.tags?.includes("Gold Supplier") || supplier?.tags?.includes("Trade Assurance") || false },
+    { item: "Garantía comercial disponible",              passed: supplier?.tradeAssurance || supplier?.tags?.includes("Trade Assurance") || false },
+    { item: "Proveedor verificado/evaluado",              passed: supplier?.verified || supplier?.tags?.includes("Assessed") || false },
+    { item: "Certificación de producto revisada",         passed: false },
+    { item: "Auditoría de fábrica realizada",             passed: supplier?.tags?.includes("Audited") || false },
   ];
 }
 
-function calculateRiskScore(
-  supplier: any,
-  productType: string,
-  destination: string,
-): number {
-  let score = 50; // base score
-
-  // Lower score = lower risk (better)
-  if (supplier?.verified) score -= 8;
-  if (supplier?.tradeAssurance) score -= 5;
-  if (supplier?.goldSupplier) score -= 5;
-  if (supplier?.yearsInBusiness >= 5) score -= 5;
+function calculateRiskScore(supplier: any, productType: string, destination: string): number {
+  let score = 50;
+  if (supplier?.verified)              score -= 8;
+  if (supplier?.tradeAssurance)        score -= 5;
+  if (supplier?.goldSupplier)          score -= 5;
+  if (supplier?.yearsInBusiness >= 5)  score -= 5;
   if (supplier?.yearsInBusiness >= 10) score -= 5;
-  if (supplier?.responseRate >= 90) score -= 3;
-  if (supplier?.aiScore >= 80) score -= 5;
-
-  // Higher risk products
-  if (productType === "electronics") score += 10;
-  if (productType === "textiles") score += 5;
-
-  // Destination risk
-  if (destination === "US") score -= 5; // stable trade relations
-  if (destination === "GT") score -= 3;
-
+  if (supplier?.responseRate >= 90)    score -= 3;
+  if (supplier?.aiScore >= 80)         score -= 5;
+  if (productType === "electronics")   score += 10;
+  if (productType === "textiles")      score += 5;
+  if (destination === "US")            score -= 5;
+  if (destination === "GT")            score -= 3;
   return Math.max(10, Math.min(80, score));
 }
 
@@ -304,56 +203,47 @@ function calculateRiskScore(
 export function RiskCompliance() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t }    = useLanguage();
 
   // ── Read navigation state ─────────────────────────────────────────────────
-  const supplier = location.state?.supplier ?? null;
-  const destination = location.state?.destination ?? "US";
-  const productType = location.state?.productType ?? "furniture";
-  const quantity = location.state?.quantity ?? "1000";
-  const budget = location.state?.budget ?? "50000";
-  const supplierName = supplier?.name ?? "Proveedor Seleccionado";
-
-  const isLiveData = !!supplier;
+  const supplier     = location.state?.supplier    ?? null;
+  const destination  = location.state?.destination ?? "US";
+  const productType  = location.state?.productType ?? "furniture";
+  const quantity     = location.state?.quantity    ?? "1000";
+  const budget       = location.state?.budget      ?? "50000";
+  const supplierName = supplier?.name              ?? "Proveedor Seleccionado";
+  const isLiveData   = !!supplier;
 
   // ── Calculate dynamic risk ────────────────────────────────────────────────
   const riskScore = calculateRiskScore(supplier, productType, destination);
-  const riskLevel =
-    riskScore < 40
-      ? t("risk.low")
-      : riskScore < 70
-        ? t("risk.medium")
-        : t("risk.high");
-  const riskColorClass =
-    riskScore < 40
-      ? "bg-gradient-to-r from-green-500 to-green-600"
-      : riskScore < 70
-        ? "bg-gradient-to-r from-yellow-500 to-yellow-600"
-        : "bg-gradient-to-r from-red-500 to-red-600";
-  const riskTextClass =
-    riskScore < 40
-      ? "text-green-100"
-      : riskScore < 70
-        ? "text-yellow-100"
-        : "text-red-100";
+  const riskLevel = riskScore < 40
+    ? t("risk.low")
+    : riskScore < 70
+      ? t("risk.medium")
+      : t("risk.high");
+
+  const riskColorClass = riskScore < 40
+    ? "bg-gradient-to-r from-green-500 to-green-600"
+    : riskScore < 70
+      ? "bg-gradient-to-r from-yellow-500 to-yellow-600"
+      : "bg-gradient-to-r from-red-500 to-red-600";
+
+  const riskTextClass = riskScore < 40
+    ? "text-green-100"
+    : riskScore < 70
+      ? "text-yellow-100"
+      : "text-red-100";
 
   // ── Dynamic content ───────────────────────────────────────────────────────
-  const documents = getDocuments(destination);
-  const warnings = getWarnings(productType, destination, supplier);
+  const documents        = getDocuments(destination);
+  const warnings         = getWarnings(productType, destination, supplier);
   const complianceChecks = getComplianceChecks(supplier);
-  const passedCount = complianceChecks.filter((c) => c.passed).length;
+  const passedCount      = complianceChecks.filter((c) => c.passed).length;
 
-  // ── Pass state forward to report ─────────────────────────────────────────
   const goToReport = () => {
     navigate("/report", {
       state: {
-        supplier,
-        destination,
-        productType,
-        quantity,
-        budget,
-        riskScore,
-        // Optional: pass supplier counts if you have them
+        supplier, destination, productType, quantity, budget, riskScore,
         suppliersData: location.state?.suppliersData,
       },
     });
@@ -366,25 +256,21 @@ export function RiskCompliance() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src={logo} alt="SEAL" className="h-[85px]" />
-            <span className="text-xl font-bold text-[#0B3C5D]">
-              SmartTrade AI
-            </span>
+            <span className="text-xl font-bold text-[#0B3C5D]">SmartTrade AI</span>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
               className="px-4 py-2.5 border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all text-sm"
             >
-              ← Costos
+              {t("risk.backToCosts")}
             </button>
             <button
               onClick={goToReport}
               className="px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
             >
-              <span className="hidden sm:inline">
-                {t("risk.generateReport")}
-              </span>
-              <span className="sm:hidden">Informe</span>
+              <span className="hidden sm:inline">{t("risk.generateReport")}</span>
+              <span className="sm:hidden">{t("risk.report")}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
             <LanguageToggle />
@@ -395,49 +281,37 @@ export function RiskCompliance() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0B3C5D] mb-2">
-            {t("risk.title")}
-          </h1>
+          <h1 className="text-3xl font-bold text-[#0B3C5D] mb-2">{t("risk.title")}</h1>
           <p className="text-slate-600">{t("risk.subtitle")}</p>
           <p className="text-xs mt-1">
             {isLiveData ? (
               <span className="text-green-600 font-medium">
-                ✅ Análisis dinámico para {supplierName} → {destination} (
-                {productType})
+                ✅ {t("risk.dynamicAnalysis")} {supplierName} → {destination} ({productType})
               </span>
             ) : (
               <span className="text-yellow-600 font-medium">
-                ⚠️ Análisis genérico — selecciona un proveedor para datos
-                precisos
+                ⚠️ {t("risk.genericAnalysis")}
               </span>
             )}
           </p>
         </div>
 
         {/* ── Risk Score Card ───────────────────────────────────────────────── */}
-        <div
-          className={`${riskColorClass} rounded-2xl shadow-xl p-8 mb-8 text-white`}
-        >
+        <div className={`${riskColorClass} rounded-2xl shadow-xl p-8 mb-8 text-white`}>
           <div className="flex items-center justify-between">
             <div>
-              <div className={`${riskTextClass} mb-2`}>
-                {t("risk.overallRiskScore")}
-              </div>
+              <div className={`${riskTextClass} mb-2`}>{t("risk.overallRiskScore")}</div>
               <div className="text-5xl font-bold">{riskScore}/100</div>
               <div className={`${riskTextClass} mt-2 flex items-center gap-2`}>
                 <Shield className="w-5 h-5" />
-                {riskLevel} RIESGO
+                {riskLevel} {t("risk.riskWord")}
               </div>
             </div>
             <div className="text-right">
-              <div className={`${riskTextClass} mb-2`}>
-                {t("risk.riskLevel")}
-              </div>
+              <div className={`${riskTextClass} mb-2`}>{t("risk.riskLevel")}</div>
               <div className="text-3xl font-bold">{riskLevel}</div>
               <div className={`text-sm ${riskTextClass} mt-2`}>
-                {riskScore < 40
-                  ? t("risk.lowMessage")
-                  : "Revisar advertencias cuidadosamente"}
+                {riskScore < 40 ? t("risk.lowMessage") : t("risk.reviewWarnings")}
               </div>
             </div>
           </div>
@@ -445,7 +319,7 @@ export function RiskCompliance() {
           {/* Risk breakdown bar */}
           <div className="mt-6 pt-6 border-t border-white/20">
             <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-white/80">Nivel de Riesgo</span>
+              <span className="text-white/80">{t("risk.riskLevel")}</span>
               <span className="text-white font-medium">{riskScore}/100</span>
             </div>
             <div className="h-3 bg-white/20 rounded-full overflow-hidden">
@@ -455,8 +329,8 @@ export function RiskCompliance() {
               />
             </div>
             <div className="flex justify-between text-xs text-white/60 mt-1">
-              <span>Bajo Riesgo</span>
-              <span>Alto Riesgo</span>
+              <span>{t("risk.lowRiskLabel")}</span>
+              <span>{t("risk.highRiskLabel")}</span>
             </div>
           </div>
         </div>
@@ -470,7 +344,7 @@ export function RiskCompliance() {
                 <AlertTriangle className="w-5 h-5" />
                 {t("risk.warnings")}
                 <span className="ml-auto text-xs text-slate-400 font-normal">
-                  Para: {productType} → {destination}
+                  {t("risk.warningsFor")} {productType} → {destination}
                 </span>
               </h2>
 
@@ -541,7 +415,7 @@ export function RiskCompliance() {
                                 : "text-blue-700"
                           }`}
                         >
-                          ✓ Recomendación: {warning.recommendation}
+                          ✓ {t("risk.recommendation")} {warning.recommendation}
                         </div>
                       </div>
                     </div>
@@ -556,7 +430,7 @@ export function RiskCompliance() {
                 <FileText className="w-5 h-5" />
                 {t("risk.requiredDocs")}
                 <span className="ml-auto text-xs text-slate-400 font-normal">
-                  Destino: {destination}
+                  {t("risk.destinationLabel")} {destination}
                 </span>
               </h2>
 
@@ -574,13 +448,9 @@ export function RiskCompliance() {
                             : "border-slate-300"
                         }`}
                       >
-                        {doc.completed && (
-                          <CheckCircle className="w-4 h-4 text-white" />
-                        )}
+                        {doc.completed && <CheckCircle className="w-4 h-4 text-white" />}
                       </div>
-                      <span className="font-medium text-slate-700">
-                        {doc.name}
-                      </span>
+                      <span className="font-medium text-slate-700">{doc.name}</span>
                     </div>
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${
@@ -616,11 +486,7 @@ export function RiskCompliance() {
                     ) : (
                       <AlertCircle className="w-5 h-5 text-slate-300 flex-shrink-0 mt-0.5" />
                     )}
-                    <span
-                      className={`text-sm ${
-                        check.passed ? "text-slate-700" : "text-slate-400"
-                      }`}
-                    >
+                    <span className={`text-sm ${check.passed ? "text-slate-700" : "text-slate-400"}`}>
                       {check.item}
                     </span>
                   </div>
@@ -640,9 +506,7 @@ export function RiskCompliance() {
                   >
                     {passedCount}/{complianceChecks.length}
                   </div>
-                  <div className="text-sm text-slate-600">
-                    {t("risk.checksPassed")}
-                  </div>
+                  <div className="text-sm text-slate-600">{t("risk.checksPassed")}</div>
                 </div>
               </div>
             </div>
@@ -652,27 +516,21 @@ export function RiskCompliance() {
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
                 <h3 className="font-semibold text-[#0B3C5D] mb-3 flex items-center gap-2">
                   <Shield className="w-5 h-5" />
-                  Proveedor Analizado
+                  {t("risk.supplierAnalyzed")}
                 </h3>
                 <div className="space-y-2 text-sm">
                   <p className="font-medium text-slate-800">{supplierName}</p>
                   <div className="flex justify-between text-slate-600">
-                    <span>Puntuación IA:</span>
-                    <span className="font-semibold text-blue-600">
-                      {supplier?.aiScore}/100
-                    </span>
+                    <span>{t("risk.aiScoreLabel")}</span>
+                    <span className="font-semibold text-blue-600">{supplier?.aiScore}/100</span>
                   </div>
                   <div className="flex justify-between text-slate-600">
-                    <span>Años en negocio:</span>
-                    <span className="font-semibold">
-                      {supplier?.yearsInBusiness}a
-                    </span>
+                    <span>{t("risk.yearsInBusiness")}</span>
+                    <span className="font-semibold">{supplier?.yearsInBusiness}a</span>
                   </div>
                   <div className="flex justify-between text-slate-600">
-                    <span>Tasa de respuesta:</span>
-                    <span className="font-semibold">
-                      {supplier?.responseRate}%
-                    </span>
+                    <span>{t("risk.responseRate")}</span>
+                    <span className="font-semibold">{supplier?.responseRate}%</span>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {supplier?.tags?.map((tag: string, i: number) => (
@@ -741,10 +599,10 @@ export function RiskCompliance() {
                 }`}
               >
                 {riskScore < 40
-                  ? `Esta importación tiene un perfil de riesgo ${riskLevel.toLowerCase()}. ${passedCount >= 4 ? "El proveedor cumple con la mayoría de los criterios." : "Atender las verificaciones pendientes antes de proceder."}`
+                  ? `${t("risk.assessmentLow1")} ${riskLevel.toLowerCase()}. ${passedCount >= 4 ? t("risk.assessmentLow2") : t("risk.assessmentLow3")}`
                   : riskScore < 70
-                    ? "Esta importación tiene riesgo medio. Revisar todas las advertencias y completar las verificaciones de cumplimiento antes de proceder."
-                    : "Esta importación tiene riesgo alto. Se recomienda revisar cuidadosamente todas las advertencias y considerar proveedores alternativos."}
+                    ? t("risk.assessmentMedium")
+                    : t("risk.assessmentHigh")}
               </p>
             </div>
           </div>

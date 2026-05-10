@@ -141,7 +141,7 @@ export function LandingPage() {
                       disabled={submitting}
                       className="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white font-semibold hover:from-blue-700 hover:to-[#0a2f47] transition-all shadow-lg hover:shadow-xl disabled:opacity-60"
                     >
-                      {submitting ? "Procesando..." : t("hero.continue")}
+                      {submitting ? t("hero.processing") : t("hero.continue")}
                     </button>
                     <button
                       type="button"
