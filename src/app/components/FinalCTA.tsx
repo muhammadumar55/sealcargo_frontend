@@ -1,8 +1,17 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
-  Download, FileText, Mail, Phone, CheckCircle,
-  ArrowRight, Star, Users, TrendingUp, Target, X,
+  Download,
+  FileText,
+  Mail,
+  Phone,
+  CheckCircle,
+  ArrowRight,
+  Star,
+  Users,
+  TrendingUp,
+  Target,
+  X,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -18,37 +27,66 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DUTY_RATES: Record<string, number> = {
-  furniture: 0.06, electronics: 0.00, textiles: 0.12, machinery: 0.02, other: 0.05,
+  furniture: 0.06,
+  electronics: 0.0,
+  textiles: 0.12,
+  machinery: 0.02,
+  other: 0.05,
 };
 const SHIPPING_COSTS: Record<string, number> = {
-  US: 4200, GT: 3800, MX: 3500, CA: 4800, other: 5000,
+  US: 4200,
+  GT: 3800,
+  MX: 3500,
+  CA: 4800,
+  other: 5000,
 };
-const VAT_RATE       = 0.12;
+const VAT_RATE = 0.12;
 const INSURANCE_RATE = 0.01;
 
-function calculateCosts(price: number, quantity: number, destination: string, productType: string) {
-  const productCost  = Math.round(price * quantity);
-  const shipping     = SHIPPING_COSTS[destination] || 4200;
-  const dutyRate     = DUTY_RATES[productType] || 0.06;
+function calculateCosts(
+  price: number,
+  quantity: number,
+  destination: string,
+  productType: string,
+) {
+  const productCost = Math.round(price * quantity);
+  const shipping = SHIPPING_COSTS[destination] || 4200;
+  const dutyRate = DUTY_RATES[productType] || 0.06;
   const importDuties = Math.round(productCost * dutyRate);
-  const taxes        = Math.round((productCost + importDuties) * VAT_RATE);
-  const insurance    = Math.round(productCost * INSURANCE_RATE);
-  const totalCost    = productCost + shipping + importDuties + taxes + insurance;
-  return { productCost, shipping, importDuties, taxes, insurance, totalCost,
-    perUnit: parseFloat((totalCost / quantity).toFixed(2)), dutyRate };
+  const taxes = Math.round((productCost + importDuties) * VAT_RATE);
+  const insurance = Math.round(productCost * INSURANCE_RATE);
+  const totalCost = productCost + shipping + importDuties + taxes + insurance;
+  return {
+    productCost,
+    shipping,
+    importDuties,
+    taxes,
+    insurance,
+    totalCost,
+    perUnit: parseFloat((totalCost / quantity).toFixed(2)),
+    dutyRate,
+  };
 }
 
 // ─── PDF Generation (with company info) ──────────────────────────────────────
 function generateReportPDF(data: {
-  supplierName: string; quantity: number; price: number;
-  destination: string; productType: string; riskScore: number;
+  supplierName: string;
+  quantity: number;
+  price: number;
+  destination: string;
+  productType: string;
+  riskScore: number;
   costs: ReturnType<typeof calculateCosts>;
   reportId: string;
   saveFile?: boolean;
 }): string {
-  const doc       = new jsPDF();
+  const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
-  const now       = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+  const now = new Date().toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   // Main header
   doc.setFillColor(11, 60, 93);
@@ -75,8 +113,16 @@ function generateReportPDF(data: {
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text(`Mejor Proveedor:  ${data.supplierName}`, 18, yAfterCompany + 24);
-  doc.text(`Producto: ${data.productType}  |  Destino: ${data.destination}`, 18, yAfterCompany + 30);
-  doc.text(`Cantidad: ${data.quantity.toLocaleString()} uds  |  Precio: $${Number(data.price).toFixed(2)}/u`, 18, yAfterCompany + 36);
+  doc.text(
+    `Producto: ${data.productType}  |  Destino: ${data.destination}`,
+    18,
+    yAfterCompany + 30,
+  );
+  doc.text(
+    `Cantidad: ${data.quantity.toLocaleString()} uds  |  Precio: $${Number(data.price).toFixed(2)}/u`,
+    18,
+    yAfterCompany + 36,
+  );
 
   // Cost section
   doc.setFontSize(12);
@@ -87,15 +133,45 @@ function generateReportPDF(data: {
     startY: yAfterCompany + 54,
     head: [["Concepto", "Detalle", "Monto (USD)"]],
     body: [
-      ["Costo de Producto",      `${data.quantity.toLocaleString()} × $${Number(data.price).toFixed(2)}`, `$${data.costs.productCost.toLocaleString()}`],
-      ["Flete Marítimo",         `Envío a ${data.destination}`, `$${data.costs.shipping.toLocaleString()}`],
-      ["Aranceles de Importación", `${(data.costs.dutyRate * 100).toFixed(0)}% para ${data.productType}`, `$${data.costs.importDuties.toLocaleString()}`],
-      ["IVA & Impuestos",        `IVA ${(VAT_RATE * 100).toFixed(0)}%`, `$${data.costs.taxes.toLocaleString()}`],
-      ["Seguro de Carga",        `${(INSURANCE_RATE * 100).toFixed(0)}% del valor`, `$${data.costs.insurance.toLocaleString()}`],
+      [
+        "Costo de Producto",
+        `${data.quantity.toLocaleString()} × $${Number(data.price).toFixed(2)}`,
+        `$${data.costs.productCost.toLocaleString()}`,
+      ],
+      [
+        "Flete Marítimo",
+        `Envío a ${data.destination}`,
+        `$${data.costs.shipping.toLocaleString()}`,
+      ],
+      [
+        "Aranceles de Importación",
+        `${(data.costs.dutyRate * 100).toFixed(0)}% para ${data.productType}`,
+        `$${data.costs.importDuties.toLocaleString()}`,
+      ],
+      [
+        "IVA & Impuestos",
+        `IVA ${(VAT_RATE * 100).toFixed(0)}%`,
+        `$${data.costs.taxes.toLocaleString()}`,
+      ],
+      [
+        "Seguro de Carga",
+        `${(INSURANCE_RATE * 100).toFixed(0)}% del valor`,
+        `$${data.costs.insurance.toLocaleString()}`,
+      ],
     ],
-    foot: [["COSTO TOTAL LANDED", `${data.quantity.toLocaleString()} unidades`, `$${data.costs.totalCost.toLocaleString()}`]],
+    foot: [
+      [
+        "COSTO TOTAL LANDED",
+        `${data.quantity.toLocaleString()} unidades`,
+        `$${data.costs.totalCost.toLocaleString()}`,
+      ],
+    ],
     headStyles: { fillColor: [11, 60, 93], textColor: 255 },
-    footStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold" },
+    footStyles: {
+      fillColor: [59, 130, 246],
+      textColor: 255,
+      fontStyle: "bold",
+    },
     alternateRowStyles: { fillColor: [239, 246, 255] },
     styles: { fontSize: 9 },
   });
@@ -107,17 +183,26 @@ function generateReportPDF(data: {
   doc.setTextColor(11, 60, 93);
   doc.text("Evaluación de Riesgos", 14, finalY1);
 
-  const riskLevel = data.riskScore < 40 ? "BAJO" : data.riskScore < 70 ? "MEDIO" : "ALTO";
+  const riskLevel =
+    data.riskScore < 40 ? "BAJO" : data.riskScore < 70 ? "MEDIO" : "ALTO";
   const riskColor: [number, number, number] =
-    data.riskScore < 40 ? [34, 197, 94] :
-    data.riskScore < 70 ? [234, 179, 8]  : [239, 68, 68];
+    data.riskScore < 40
+      ? [34, 197, 94]
+      : data.riskScore < 70
+        ? [234, 179, 8]
+        : [239, 68, 68];
 
   doc.setFillColor(...riskColor);
   doc.rect(14, finalY1 + 4, pageWidth - 28, 22, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text(`Nivel de Riesgo: ${riskLevel}  (${data.riskScore}/100)`, pageWidth / 2, finalY1 + 17, { align: "center" });
+  doc.text(
+    `Nivel de Riesgo: ${riskLevel}  (${data.riskScore}/100)`,
+    pageWidth / 2,
+    finalY1 + 17,
+    { align: "center" },
+  );
 
   // Per unit summary
   const finalY2 = finalY1 + 36;
@@ -128,14 +213,18 @@ function generateReportPDF(data: {
   doc.setFont("helvetica", "bold");
   doc.text(
     `Costo por Unidad: $${data.costs.perUnit}  |  Total: $${data.costs.totalCost.toLocaleString()}`,
-    pageWidth / 2, finalY2 + 11, { align: "center" }
+    pageWidth / 2,
+    finalY2 + 11,
+    { align: "center" },
   );
 
   // Company footer (NEW)
   drawCompanyFooter(doc);
 
   if (data.saveFile) {
-    doc.save(`SEAL_FullReport_${data.supplierName.replace(/\s+/g, "_")}_${Date.now()}.pdf`);
+    doc.save(
+      `SEAL_FullReport_${data.supplierName.replace(/\s+/g, "_")}_${Date.now()}.pdf`,
+    );
   }
 
   return doc.output("datauristring").split(",")[1];
@@ -143,19 +232,22 @@ function generateReportPDF(data: {
 
 // ─── Excel Export (NEW: Beautiful XLSX) ───────────────────────────────────────
 async function exportToExcel(data: {
-  supplierName: string; quantity: number; price: number;
-  destination: string; productType: string;
+  supplierName: string;
+  quantity: number;
+  price: number;
+  destination: string;
+  productType: string;
   costs: ReturnType<typeof calculateCosts>;
 }) {
   await generateBeautifulExcel({
-    reportTitle:  "Informe Completo de Análisis",
+    reportTitle: "Informe Completo de Análisis",
     supplierName: data.supplierName,
-    productType:  data.productType,
-    destination:  data.destination,
-    quantity:     data.quantity,
-    price:        data.price,
-    costs:        data.costs,
-    vatRate:      VAT_RATE,
+    productType: data.productType,
+    destination: data.destination,
+    quantity: data.quantity,
+    price: data.price,
+    costs: data.costs,
+    vatRate: VAT_RATE,
     insuranceRate: INSURANCE_RATE,
   });
 }
@@ -164,60 +256,73 @@ async function exportToExcel(data: {
 export function FinalCTA() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t }    = useLanguage();
+  const { t } = useLanguage();
 
   // ── Read state ────────────────────────────────────────────────────────────
-  const stateSupplier      = location.state?.supplier      ?? null;
-  const stateQuantity      = location.state?.quantity      ?? "1000";
-  const stateBudget        = location.state?.budget        ?? "50000";
-  const stateDestination   = location.state?.destination   ?? "US";
-  const stateProductType   = location.state?.productType   ?? "furniture";
-  const stateRiskScore     = location.state?.riskScore     ?? 32;
+  const stateSupplier = location.state?.supplier ?? null;
+  const stateQuantity = location.state?.quantity ?? "1000";
+  const stateBudget = location.state?.budget ?? "50000";
+  const stateDestination = location.state?.destination ?? "US";
+  const stateProductType = location.state?.productType ?? "furniture";
+  const stateRiskScore = location.state?.riskScore ?? 32;
   const stateSuppliersData = location.state?.suppliersData ?? null;
 
-  const quantity    = parseInt(String(stateQuantity)) || 1000;
+  const quantity = parseInt(String(stateQuantity)) || 1000;
   const destination = String(stateDestination);
   const productType = String(stateProductType);
 
-  const price        = stateSupplier?.price > 0 ? stateSupplier.price : 38.75;
+  const price = stateSupplier?.price > 0 ? stateSupplier.price : 38.75;
   const supplierName = stateSupplier?.name || "Proveedor Seleccionado";
-  const isLiveData   = !!stateSupplier;
+  const isLiveData = !!stateSupplier;
 
   const costs = calculateCosts(price, quantity, destination, productType);
 
   // ── Dynamic stats ─────────────────────────────────────────────────────────
   const leadStats = {
-    totalAnalyzed: stateSuppliersData?.totalCount       ?? 15,
-    filtered:      stateSuppliersData?.filteredOutCount ?? 5,
-    qualified:     stateSuppliersData?.qualifiedCount   ?? 9,
-    topPicks:      3,
+    totalAnalyzed: stateSuppliersData?.totalCount ?? 15,
+    filtered: stateSuppliersData?.filteredOutCount ?? 5,
+    qualified: stateSuppliersData?.qualifiedCount ?? 9,
+    topPicks: 3,
   };
 
   // ── Risk display ──────────────────────────────────────────────────────────
-  const riskLevel = stateRiskScore < 40 ? t("risk.low") : stateRiskScore < 70 ? t("risk.medium") : t("risk.high");
-  const riskColor = stateRiskScore < 40 ? "text-green-600" : stateRiskScore < 70 ? "text-yellow-600" : "text-red-600";
+  const riskLevel =
+    stateRiskScore < 40
+      ? t("risk.low")
+      : stateRiskScore < 70
+        ? t("risk.medium")
+        : t("risk.high");
+  const riskColor =
+    stateRiskScore < 40
+      ? "text-green-600"
+      : stateRiskScore < 70
+        ? "text-yellow-600"
+        : "text-red-600";
 
   // ── Modal state ───────────────────────────────────────────────────────────
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [submitting,     setSubmitting]     = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Quote form
-  const [quoteName,    setQuoteName]    = useState("");
-  const [quoteEmail,   setQuoteEmail]   = useState("");
-  const [quotePhone,   setQuotePhone]   = useState("");
+  const [quoteName, setQuoteName] = useState("");
+  const [quoteEmail, setQuoteEmail] = useState("");
+  const [quotePhone, setQuotePhone] = useState("");
   const [quoteCompany, setQuoteCompany] = useState("");
   const [quoteMessage, setQuoteMessage] = useState("");
 
   // Email form
-  const [emailRecipient,     setEmailRecipient]     = useState("");
+  const [emailRecipient, setEmailRecipient] = useState("");
   const [emailRecipientName, setEmailRecipientName] = useState("");
 
   const reportId = `SEAL-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
 
   const reportSections = [
     { name: t("final.section1"), pages: 2 },
-    { name: `${t("final.section2Prefix")} (${leadStats.qualified} ${t("final.section2Suffix")})`, pages: 8 },
+    {
+      name: `${t("final.section2Prefix")} (${leadStats.qualified} ${t("final.section2Suffix")})`,
+      pages: 8,
+    },
     { name: t("final.section3"), pages: 4 },
     { name: t("final.section4"), pages: 6 },
     { name: t("final.section5"), pages: 3 },
@@ -227,14 +332,28 @@ export function FinalCTA() {
   // ── Action: Download Full Report ──────────────────────────────────────────
   const handleDownloadReport = () => {
     generateReportPDF({
-      supplierName, quantity, price, destination, productType,
-      riskScore: stateRiskScore, costs, reportId, saveFile: true,
+      supplierName,
+      quantity,
+      price,
+      destination,
+      productType,
+      riskScore: stateRiskScore,
+      costs,
+      reportId,
+      saveFile: true,
     });
   };
 
   // ── Action: Excel Export ──────────────────────────────────────────────────
   const handleExcelExport = async () => {
-    await exportToExcel({ supplierName, quantity, price, destination, productType, costs });
+    await exportToExcel({
+      supplierName,
+      quantity,
+      price,
+      destination,
+      productType,
+      costs,
+    });
   };
 
   // ── Action: Schedule Call ─────────────────────────────────────────────────
@@ -253,20 +372,27 @@ export function FinalCTA() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            name:    quoteName,
-            email:   quoteEmail,
-            phone:   quotePhone,
+            name: quoteName,
+            email: quoteEmail,
+            phone: quotePhone,
             company: quoteCompany,
             message: quoteMessage,
-            supplierName, totalCost: costs.totalCost,
-            productType,  quantity, destination,
+            supplierName,
+            totalCost: costs.totalCost,
+            productType,
+            quantity,
+            destination,
           }),
-        }
+        },
       );
       if (!res.ok) throw new Error("Failed");
       alert(t("final.quoteSuccess"));
       setShowQuoteModal(false);
-      setQuoteName(""); setQuoteEmail(""); setQuotePhone(""); setQuoteCompany(""); setQuoteMessage("");
+      setQuoteName("");
+      setQuoteEmail("");
+      setQuotePhone("");
+      setQuoteCompany("");
+      setQuoteMessage("");
     } catch (err) {
       alert(t("final.quoteError"));
     } finally {
@@ -280,8 +406,15 @@ export function FinalCTA() {
     setSubmitting(true);
     try {
       const pdfBase64 = generateReportPDF({
-        supplierName, quantity, price, destination, productType,
-        riskScore: stateRiskScore, costs, reportId, saveFile: false,
+        supplierName,
+        quantity,
+        price,
+        destination,
+        productType,
+        riskScore: stateRiskScore,
+        costs,
+        reportId,
+        saveFile: false,
       });
 
       const res = await fetch(
@@ -291,17 +424,18 @@ export function FinalCTA() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             recipientEmail: emailRecipient,
-            recipientName:  emailRecipientName,
+            recipientName: emailRecipientName,
             pdfBase64,
             supplierName,
             totalCost: costs.totalCost,
           }),
-        }
+        },
       );
       if (!res.ok) throw new Error("Failed");
       alert(t("final.emailSuccess"));
       setShowEmailModal(false);
-      setEmailRecipient(""); setEmailRecipientName("");
+      setEmailRecipient("");
+      setEmailRecipientName("");
     } catch (err) {
       alert(t("final.emailError"));
     } finally {
@@ -313,15 +447,21 @@ export function FinalCTA() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-blue-50">
       {/* Header */}
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="SEAL" className="h-[85px]" />
-            <span className="text-xl font-bold text-[#0B3C5D]">SmartTrade AI</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <img
+              src={logo}
+              alt="SEAL"
+              className="h-12 sm:h-16 md:h-[85px] flex-shrink-0"
+            />
+            <span className="text-sm sm:text-xl font-bold text-[#0B3C5D] hidden xs:block truncate">
+              SmartTrade AI
+            </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <button
               onClick={() => navigate("/")}
-              className="px-5 py-2.5 border-2 border-[#0B3C5D] text-[#0B3C5D] rounded-xl hover:bg-[#0B3C5D] hover:text-white transition-all font-medium shadow-sm hover:shadow-md"
+              className="px-3 sm:px-5 py-2 sm:py-2.5 border-2 border-[#0B3C5D] text-[#0B3C5D] rounded-xl hover:bg-[#0B3C5D] hover:text-white transition-all font-medium shadow-sm hover:shadow-md text-xs sm:text-sm whitespace-nowrap"
             >
               {t("final.startNew")}
             </button>
@@ -330,15 +470,16 @@ export function FinalCTA() {
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 py-8 sm:py-12">
         {/* Success */}
         <div className="text-center mb-12">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
-          <h1 className="text-4xl font-bold text-[#0B3C5D] mb-3">{t("final.complete")}</h1>
-          <p className="text-xl text-slate-600">
-            {t("final.analyzed")} {leadStats.totalAnalyzed} {t("final.suppliers")} {leadStats.qualified} {t("final.qualifiedLeads")}
+          <p className="text-xs mt-2">
+            {t("final.analyzed")} {leadStats.totalAnalyzed}{" "}
+            {t("final.suppliers")} {leadStats.qualified}{" "}
+            {t("final.qualifiedLeads")}
           </p>
           <p className="text-xs mt-2">
             {isLiveData ? (
@@ -357,22 +498,34 @@ export function FinalCTA() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 text-center">
             <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <div className="text-3xl font-bold text-[#0B3C5D] mb-1">{leadStats.totalAnalyzed}</div>
-            <div className="text-sm text-slate-600">{t("final.suppliersAnalyzed")}</div>
+            <div className="text-3xl font-bold text-[#0B3C5D] mb-1">
+              {leadStats.totalAnalyzed}
+            </div>
+            <div className="text-sm text-slate-600">
+              {t("final.suppliersAnalyzed")}
+            </div>
           </div>
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 text-center">
             <Target className="w-8 h-8 text-red-600 mx-auto mb-2" />
-            <div className="text-3xl font-bold text-red-600 mb-1">{leadStats.filtered}</div>
-            <div className="text-sm text-slate-600">{t("final.filteredOut")}</div>
+            <div className="text-3xl font-bold text-red-600 mb-1">
+              {leadStats.filtered}
+            </div>
+            <div className="text-sm text-slate-600">
+              {t("final.filteredOut")}
+            </div>
           </div>
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 text-center">
             <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <div className="text-3xl font-bold text-green-600 mb-1">{leadStats.qualified}</div>
+            <div className="text-3xl font-bold text-green-600 mb-1">
+              {leadStats.qualified}
+            </div>
             <div className="text-sm text-slate-600">{t("final.qualified")}</div>
           </div>
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 text-center">
             <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-            <div className="text-3xl font-bold text-purple-600 mb-1">{leadStats.topPicks}</div>
+            <div className="text-3xl font-bold text-purple-600 mb-1">
+              {leadStats.topPicks}
+            </div>
             <div className="text-sm text-slate-600">{t("final.topPicks")}</div>
           </div>
         </div>
@@ -381,54 +534,84 @@ export function FinalCTA() {
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 mb-8">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-[#0B3C5D] mb-2">{t("final.reportTitle")}</h2>
+              <h2 className="text-2xl font-bold text-[#0B3C5D] mb-2">
+                {t("final.reportTitle")}
+              </h2>
               <p className="text-slate-600">{t("final.reportSubtitle")}</p>
             </div>
             <div className="text-right">
-              <div className="text-sm text-slate-600 mb-1">{t("final.reportID")}</div>
-              <div className="font-mono text-[#0B3C5D] font-semibold">#{reportId}</div>
+              <div className="text-sm text-slate-600 mb-1">
+                {t("final.reportID")}
+              </div>
+              <div className="font-mono text-[#0B3C5D] font-semibold">
+                #{reportId}
+              </div>
             </div>
           </div>
 
           {/* Dynamic Key Findings */}
           <div className="grid md:grid-cols-3 gap-4 mb-8">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-              <div className="text-sm text-blue-700 mb-2">{t("final.bestSupplier")}</div>
+              <div className="text-sm text-blue-700 mb-2">
+                {t("final.bestSupplier")}
+              </div>
               <div className="font-bold text-xl text-[#0B3C5D] mb-1 truncate">
                 {supplierName.split(" ").slice(0, 2).join(" ")}
               </div>
               <div className="flex items-center gap-1 text-sm text-blue-700">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                {stateSupplier?.rating ?? 4.9} • {stateSupplier?.verified ? t("final.verified") : t("final.standard")}
+                {stateSupplier?.rating ?? 4.9} •{" "}
+                {stateSupplier?.verified
+                  ? t("final.verified")
+                  : t("final.standard")}
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
-              <div className="text-sm text-green-700 mb-2">{t("final.totalCost")}</div>
+              <div className="text-sm text-green-700 mb-2">
+                {t("final.totalCost")}
+              </div>
               <div className="font-bold text-xl text-[#0B3C5D] mb-1">
                 ${costs.totalCost.toLocaleString()}
               </div>
-              <div className="text-sm text-green-700">${costs.perUnit} {t("final.perUnit")}</div>
+              <div className="text-sm text-green-700">
+                ${costs.perUnit} {t("final.perUnit")}
+              </div>
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
-              <div className="text-sm text-purple-700 mb-2">{t("final.riskLevel")}</div>
-              <div className={`font-bold text-xl ${riskColor} mb-1`}>{riskLevel}</div>
-              <div className="text-sm text-purple-700">{stateRiskScore}/100 {t("final.riskScore")}</div>
+              <div className="text-sm text-purple-700 mb-2">
+                {t("final.riskLevel")}
+              </div>
+              <div className={`font-bold text-xl ${riskColor} mb-1`}>
+                {riskLevel}
+              </div>
+              <div className="text-sm text-purple-700">
+                {stateRiskScore}/100 {t("final.riskScore")}
+              </div>
             </div>
           </div>
 
           {/* Report Sections */}
           <div className="mb-8">
-            <h3 className="font-semibold text-[#0B3C5D] mb-4">{t("final.reportContents")}</h3>
+            <h3 className="font-semibold text-[#0B3C5D] mb-4">
+              {t("final.reportContents")}
+            </h3>
             <div className="space-y-2">
               {reportSections.map((section, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-500" />
-                    <span className="font-medium text-slate-700">{section.name}</span>
+                    <span className="font-medium text-slate-700">
+                      {section.name}
+                    </span>
                   </div>
-                  <span className="text-sm text-slate-600">{section.pages} {t("final.pages")}</span>
+                  <span className="text-sm text-slate-600">
+                    {section.pages} {t("final.pages")}
+                  </span>
                 </div>
               ))}
             </div>
@@ -445,25 +628,46 @@ export function FinalCTA() {
         </div>
 
         {/* SEAL Service CTA */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-[#0B3C5D] via-blue-900 to-purple-900 rounded-3xl shadow-2xl p-10 text-white mb-8">
+        <div className="relative overflow-hidden bg-gradient-to-r from-[#0B3C5D] via-blue-900 to-purple-900 rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-10 text-white mb-8">
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
 
           <div className="relative z-10">
             <div className="text-center mb-10">
-              <h2 className="text-4xl font-bold mb-4 drop-shadow-lg">{t("final.sealTitle")}</h2>
-              <p className="text-blue-100 text-xl max-w-2xl mx-auto">{t("final.sealSubtitle")}</p>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 drop-shadow-lg">
+                {t("final.sealTitle")}
+              </h2>
+              <p className="text-sm sm:text-base md:text-xl text-blue-100 max-w-2xl mx-auto">
+                {t("final.sealSubtitle")}
+              </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6 mb-10">
               {[
-                { titleKey: "final.negotiation",    descKey: "final.negotiationDesc",    icon: "💰" },
-                { titleKey: "final.qualityControl", descKey: "final.qualityControlDesc", icon: "✓"  },
-                { titleKey: "final.fullLogistics",  descKey: "final.fullLogisticsDesc",  icon: "🚢" },
+                {
+                  titleKey: "final.negotiation",
+                  descKey: "final.negotiationDesc",
+                  icon: "💰",
+                },
+                {
+                  titleKey: "final.qualityControl",
+                  descKey: "final.qualityControlDesc",
+                  icon: "✓",
+                },
+                {
+                  titleKey: "final.fullLogistics",
+                  descKey: "final.fullLogisticsDesc",
+                  icon: "🚢",
+                },
               ].map((service, i) => (
-                <div key={i} className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/30 hover:bg-white/20 transition-all shadow-xl">
+                <div
+                  key={i}
+                  className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/30 hover:bg-white/20 transition-all shadow-xl"
+                >
                   <div className="text-3xl mb-3">{service.icon}</div>
-                  <h3 className="text-lg font-semibold mb-2">{t(service.titleKey)}</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    {t(service.titleKey)}
+                  </h3>
                   <p className="text-sm text-blue-100">{t(service.descKey)}</p>
                 </div>
               ))}
@@ -519,10 +723,22 @@ export function FinalCTA() {
               {t("final.nextSteps")}
             </h3>
             <ul className="space-y-3 text-sm text-slate-700">
-              <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" /><span>{t("final.step1")}</span></li>
-              <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" /><span>{t("final.step2")}</span></li>
-              <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" /><span>{t("final.step3")}</span></li>
-              <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" /><span>{t("final.step4")}</span></li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{t("final.step1")}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{t("final.step2")}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{t("final.step3")}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{t("final.step4")}</span>
+              </li>
             </ul>
           </div>
         </div>
@@ -543,8 +759,13 @@ export function FinalCTA() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#0B3C5D]">{t("final.quoteModalTitle")}</h2>
-              <button onClick={() => setShowQuoteModal(false)} className="text-slate-400 hover:text-slate-600">
+              <h2 className="text-2xl font-bold text-[#0B3C5D]">
+                {t("final.quoteModalTitle")}
+              </h2>
+              <button
+                onClick={() => setShowQuoteModal(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -552,29 +773,55 @@ export function FinalCTA() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-5 text-sm">
               <p className="font-semibold text-[#0B3C5D]">{supplierName}</p>
               <p className="text-slate-600 mt-1">
-                {quantity.toLocaleString()} {t("final.quoteUnits")} ${costs.totalCost.toLocaleString()}
+                {quantity.toLocaleString()} {t("final.quoteUnits")} $
+                {costs.totalCost.toLocaleString()}
               </p>
             </div>
 
             <form onSubmit={handleQuoteSubmit} className="space-y-4">
-              <input type="text" required placeholder={t("final.quoteFullName")} value={quoteName}
+              <input
+                type="text"
+                required
+                placeholder={t("final.quoteFullName")}
+                value={quoteName}
                 onChange={(e) => setQuoteName(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="email" required placeholder={t("final.quoteEmail")} value={quoteEmail}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="email"
+                required
+                placeholder={t("final.quoteEmail")}
+                value={quoteEmail}
                 onChange={(e) => setQuoteEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="tel" placeholder={t("final.quotePhone")} value={quotePhone}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="tel"
+                placeholder={t("final.quotePhone")}
+                value={quotePhone}
                 onChange={(e) => setQuotePhone(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="text" placeholder={t("final.quoteCompany")} value={quoteCompany}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="text"
+                placeholder={t("final.quoteCompany")}
+                value={quoteCompany}
                 onChange={(e) => setQuoteCompany(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <textarea placeholder={t("final.quoteMessage")} value={quoteMessage}
-                onChange={(e) => setQuoteMessage(e.target.value)} rows={4}
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <textarea
+                placeholder={t("final.quoteMessage")}
+                value={quoteMessage}
+                onChange={(e) => setQuoteMessage(e.target.value)}
+                rows={4}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
 
-              <button type="submit" disabled={submitting}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-lg hover:from-blue-700 hover:to-[#0a2f47] transition-all font-semibold disabled:opacity-60">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-lg hover:from-blue-700 hover:to-[#0a2f47] transition-all font-semibold disabled:opacity-60"
+              >
                 {submitting ? t("final.quoteSending") : t("final.quoteSubmit")}
               </button>
             </form>
@@ -587,24 +834,43 @@ export function FinalCTA() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#0B3C5D]">{t("final.emailModalTitle")}</h2>
-              <button onClick={() => setShowEmailModal(false)} className="text-slate-400 hover:text-slate-600">
+              <h2 className="text-2xl font-bold text-[#0B3C5D]">
+                {t("final.emailModalTitle")}
+              </h2>
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <p className="text-sm text-slate-600 mb-5">{t("final.emailModalDesc")}</p>
+            <p className="text-sm text-slate-600 mb-5">
+              {t("final.emailModalDesc")}
+            </p>
 
             <form onSubmit={handleEmailReport} className="space-y-4">
-              <input type="text" placeholder={t("final.emailYourName")} value={emailRecipientName}
+              <input
+                type="text"
+                placeholder={t("final.emailYourName")}
+                value={emailRecipientName}
                 onChange={(e) => setEmailRecipientName(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <input type="email" required placeholder={t("final.emailYourEmail")} value={emailRecipient}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="email"
+                required
+                placeholder={t("final.emailYourEmail")}
+                value={emailRecipient}
                 onChange={(e) => setEmailRecipient(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
 
-              <button type="submit" disabled={submitting}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-lg hover:from-blue-700 hover:to-[#0a2f47] transition-all font-semibold disabled:opacity-60 flex items-center justify-center gap-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-lg hover:from-blue-700 hover:to-[#0a2f47] transition-all font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+              >
                 <Mail className="w-5 h-5" />
                 {submitting ? t("final.emailSending") : t("final.emailSubmit")}
               </button>

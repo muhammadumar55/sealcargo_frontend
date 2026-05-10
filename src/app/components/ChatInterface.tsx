@@ -11,6 +11,7 @@ interface Message {
 }
 
 export function ChatInterface() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { query, name, email } = location.state || {};
@@ -54,44 +55,32 @@ export function ChatInterface() {
   return (
     <div className="h-screen flex bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Sidebar */}
-      <div className="w-64 bg-white/80 backdrop-blur-lg border-r border-slate-200 flex flex-col shadow-xl">
-        <div className="p-4 border-b border-slate-200">
-          <div className="flex items-center gap-2 mb-4">
-            <img src={logo} alt="SEAL" className="h-[85px]" />
-            <span className="font-bold text-[#0B3C5D]">SmartTrade AI</span>
-          </div>
-          <button className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
-            <MessageSquare className="w-4 h-4" />
-            {t("chat.newAnalysis")}
-          </button>
-        </div>
+      {/* Mobile menu button */}
+<button
+  onClick={() => setSidebarOpen(!sidebarOpen)}
+  className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-slate-200"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+</button>
 
-        <div className="flex-1 overflow-y-auto p-4">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase mb-3">
-            {t("chat.conversations")}
-          </h3>
-          {conversations.map((conv, i) => (
-            <div
-              key={i}
-              className="px-3 py-2 rounded-lg hover:bg-slate-50 cursor-pointer text-sm text-slate-700 mb-1"
-            >
-              {conv}
-            </div>
-          ))}
-        </div>
+{/* Sidebar overlay (mobile) */}
+{sidebarOpen && (
+  <div
+    onClick={() => setSidebarOpen(false)}
+    className="lg:hidden fixed inset-0 bg-black/50 z-30"
+  />
+)}
 
-        <div className="p-4 border-t border-slate-200">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase mb-3">
-            {t("chat.savedReports")}
-          </h3>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-[#0B3C5D]">
-              <FileText className="w-4 h-4" />
-              <span>Informe #1234</span>
-            </div>
-          </div>
-        </div>
-      </div>
+{/* Sidebar */}
+<div className={`
+  fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white/95 backdrop-blur-lg border-r border-slate-200 flex flex-col shadow-xl
+  transform transition-transform duration-300 ease-in-out
+  ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+`}>
+  {/* ...keep existing sidebar content... */}
+</div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
