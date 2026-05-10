@@ -1,30 +1,335 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
-import { Download, FileText, Mail, Phone, CheckCircle, ArrowRight, Star, Users, TrendingUp, Target } from "lucide-react";
+import { useNavigate, useLocation } from "react-router";
+import {
+  Download, FileText, Mail, Phone, CheckCircle,
+  ArrowRight, Star, Users, TrendingUp, Target, X,
+} from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import logo from "../../imports/ChatGPT_Image_Apr_27,_2026,_10_59_16_AM.png";
 import { useLanguage } from "../context/LanguageContext";
 import { LanguageToggle } from "./LanguageToggle";
 
+// ─── Constants for cost calculation (must match CostBreakdown) ───────────────
+const DUTY_RATES: Record<string, number> = {
+  furniture: 0.06, electronics: 0.00, textiles: 0.12, machinery: 0.02, other: 0.05,
+};
+const SHIPPING_COSTS: Record<string, number> = {
+  US: 4200, GT: 3800, MX: 3500, CA: 4800, other: 5000,
+};
+const VAT_RATE       = 0.12;
+const INSURANCE_RATE = 0.01;
+
+function calculateCosts(price: number, quantity: number, destination: string, productType: string) {
+  const productCost  = Math.round(price * quantity);
+  const shipping     = SHIPPING_COSTS[destination] || 4200;
+  const dutyRate     = DUTY_RATES[productType] || 0.06;
+  const importDuties = Math.round(productCost * dutyRate);
+  const taxes        = Math.round((productCost + importDuties) * VAT_RATE);
+  const insurance    = Math.round(productCost * INSURANCE_RATE);
+  const totalCost    = productCost + shipping + importDuties + taxes + insurance;
+  return { productCost, shipping, importDuties, taxes, insurance, totalCost,
+    perUnit: parseFloat((totalCost / quantity).toFixed(2)), dutyRate };
+}
+
+// ─── PDF Generation (returns base64 + saves) ─────────────────────────────────
+function generateReportPDF(data: {
+  supplierName: string; quantity: number; price: number;
+  destination: string; productType: string; riskScore: number;
+  costs: ReturnType<typeof calculateCosts>;
+  reportId: string;
+  saveFile?: boolean;
+}): string {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const now = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+
+  // Header
+  doc.setFillColor(11, 60, 93);
+  doc.rect(0, 0, pageWidth, 40, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.text("SEAL SmartTrade AI", 14, 16);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text("Informe Completo de Análisis de Importación", 14, 26);
+  doc.text(`Generado: ${now}  |  ID: ${data.reportId}`, 14, 34);
+
+  // Order details
+  doc.setTextColor(11, 60, 93);
+  doc.setFillColor(239, 246, 255);
+  doc.rect(14, 48, pageWidth - 28, 32, "F");
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("RESUMEN EJECUTIVO", 18, 58);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Mejor Proveedor:  ${data.supplierName}`, 18, 66);
+  doc.text(`Producto: ${data.productType}  |  Destino: ${data.destination}`, 18, 72);
+  doc.text(`Cantidad: ${data.quantity.toLocaleString()} uds  |  Precio: $${Number(data.price).toFixed(2)}/u`, 18, 78);
+
+  // Cost section
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Desglose de Costos", 14, 92);
+
+  autoTable(doc, {
+    startY: 96,
+    head: [["Concepto", "Detalle", "Monto (USD)"]],
+    body: [
+      ["Costo de Producto",      `${data.quantity.toLocaleString()} × $${Number(data.price).toFixed(2)}`, `$${data.costs.productCost.toLocaleString()}`],
+      ["Flete Marítimo",         `Envío a ${data.destination}`, `$${data.costs.shipping.toLocaleString()}`],
+      ["Aranceles de Importación", `${(data.costs.dutyRate * 100).toFixed(0)}% para ${data.productType}`, `$${data.costs.importDuties.toLocaleString()}`],
+      ["IVA & Impuestos",        `IVA ${(VAT_RATE * 100).toFixed(0)}%`, `$${data.costs.taxes.toLocaleString()}`],
+      ["Seguro de Carga",        `${(INSURANCE_RATE * 100).toFixed(0)}% del valor`, `$${data.costs.insurance.toLocaleString()}`],
+    ],
+    foot: [["COSTO TOTAL LANDED", `${data.quantity.toLocaleString()} unidades`, `$${data.costs.totalCost.toLocaleString()}`]],
+    headStyles: { fillColor: [11, 60, 93], textColor: 255 },
+    footStyles: { fillColor: [59, 130, 246], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [239, 246, 255] },
+    styles: { fontSize: 9 },
+  });
+
+  // Risk section
+  const finalY1 = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(11, 60, 93);
+  doc.text("Evaluación de Riesgos", 14, finalY1);
+
+  const riskLevel = data.riskScore < 40 ? "BAJO" : data.riskScore < 70 ? "MEDIO" : "ALTO";
+  const riskColor: [number, number, number] =
+    data.riskScore < 40 ? [34, 197, 94] :
+    data.riskScore < 70 ? [234, 179, 8]  : [239, 68, 68];
+
+  doc.setFillColor(...riskColor);
+  doc.rect(14, finalY1 + 4, pageWidth - 28, 22, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Nivel de Riesgo: ${riskLevel}  (${data.riskScore}/100)`, pageWidth / 2, finalY1 + 17, { align: "center" });
+
+  // Per unit summary
+  const finalY2 = finalY1 + 36;
+  doc.setFillColor(11, 60, 93);
+  doc.rect(14, finalY2, pageWidth - 28, 18, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text(
+    `Costo por Unidad: $${data.costs.perUnit}  |  Total: $${data.costs.totalCost.toLocaleString()}`,
+    pageWidth / 2, finalY2 + 11, { align: "center" }
+  );
+
+  // Footer
+  const pageHeight = doc.internal.pageSize.getHeight();
+  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.text(
+    "Este análisis es una estimación. Los costos reales pueden variar. SEAL SmartTrade AI © 2024",
+    pageWidth / 2, pageHeight - 10, { align: "center" }
+  );
+
+  if (data.saveFile) {
+    doc.save(`SEAL_FullReport_${data.supplierName.replace(/\s+/g, "_")}_${Date.now()}.pdf`);
+  }
+
+  return doc.output("datauristring").split(",")[1]; // base64 only
+}
+
+// ─── Excel/CSV Export ────────────────────────────────────────────────────────
+function exportToExcel(data: {
+  supplierName: string; quantity: number; price: number;
+  destination: string; productType: string;
+  costs: ReturnType<typeof calculateCosts>;
+}) {
+  const now = new Date().toLocaleDateString("es-ES");
+  const rows = [
+    "SEAL SmartTrade AI - Informe Completo",
+    `Generado:,${now}`,
+    "",
+    "RESUMEN",
+    `Proveedor:,${data.supplierName}`,
+    `Producto:,${data.productType}`,
+    `Destino:,${data.destination}`,
+    `Cantidad:,${data.quantity}`,
+    `Precio Unitario:,$${Number(data.price).toFixed(2)}`,
+    "",
+    "CONCEPTO,DETALLE,MONTO (USD)",
+    `Costo de Producto,${data.quantity} × $${Number(data.price).toFixed(2)},${data.costs.productCost}`,
+    `Flete Marítimo,Envío a ${data.destination},${data.costs.shipping}`,
+    `Aranceles,${(data.costs.dutyRate * 100).toFixed(0)}% para ${data.productType},${data.costs.importDuties}`,
+    `IVA & Impuestos,IVA ${(VAT_RATE * 100).toFixed(0)}%,${data.costs.taxes}`,
+    `Seguro de Carga,${(INSURANCE_RATE * 100).toFixed(0)}% del valor,${data.costs.insurance}`,
+    "",
+    `COSTO TOTAL,,${data.costs.totalCost}`,
+    `COSTO POR UNIDAD,,${data.costs.perUnit}`,
+  ];
+  const csv  = rows.join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href     = url;
+  link.download = `SEAL_FullReport_${data.supplierName.replace(/\s+/g, "_")}_${Date.now()}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
 export function FinalCTA() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const [showLeadExport, setShowLeadExport] = useState(false);
+  const location = useLocation();
+  const { t }    = useLanguage();
 
+  // ── Read state ────────────────────────────────────────────────────────────
+  const stateSupplier    = location.state?.supplier    ?? null;
+  const stateQuantity    = location.state?.quantity    ?? "1000";
+  const stateBudget      = location.state?.budget      ?? "50000";
+  const stateDestination = location.state?.destination ?? "US";
+  const stateProductType = location.state?.productType ?? "furniture";
+  const stateRiskScore   = location.state?.riskScore   ?? 32;
+  const stateSuppliersData = location.state?.suppliersData ?? null;
+
+  const quantity    = parseInt(String(stateQuantity)) || 1000;
+  const destination = String(stateDestination);
+  const productType = String(stateProductType);
+
+  const price        = stateSupplier?.price > 0 ? stateSupplier.price : 38.75;
+  const supplierName = stateSupplier?.name || "Proveedor Seleccionado";
+  const isLiveData   = !!stateSupplier;
+
+  const costs = calculateCosts(price, quantity, destination, productType);
+
+  // ── Dynamic stats ─────────────────────────────────────────────────────────
   const leadStats = {
-    totalAnalyzed: 15,
-    filtered: 5,
-    qualified: 9,
-    topPicks: 3
+    totalAnalyzed: stateSuppliersData?.totalCount      ?? 15,
+    filtered:      stateSuppliersData?.filteredOutCount ?? 5,
+    qualified:     stateSuppliersData?.qualifiedCount  ?? 9,
+    topPicks:      3,
   };
 
+  // ── Risk display ──────────────────────────────────────────────────────────
+  const riskLevel = stateRiskScore < 40 ? "BAJO" : stateRiskScore < 70 ? "MEDIO" : "ALTO";
+  const riskColor = stateRiskScore < 40 ? "text-green-600" : stateRiskScore < 70 ? "text-yellow-600" : "text-red-600";
+
+  // ── Modal state ───────────────────────────────────────────────────────────
+  const [showQuoteModal,  setShowQuoteModal]  = useState(false);
+  const [showEmailModal,  setShowEmailModal]  = useState(false);
+  const [submitting,      setSubmitting]      = useState(false);
+
+  // Quote form
+  const [quoteName,    setQuoteName]    = useState("");
+  const [quoteEmail,   setQuoteEmail]   = useState("");
+  const [quotePhone,   setQuotePhone]   = useState("");
+  const [quoteCompany, setQuoteCompany] = useState("");
+  const [quoteMessage, setQuoteMessage] = useState("");
+
+  // Email form
+  const [emailRecipient, setEmailRecipient] = useState("");
+  const [emailRecipientName, setEmailRecipientName] = useState("");
+
+  const reportId = `SEAL-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+
   const reportSections = [
-    { name: "Resumen Ejecutivo", pages: 2, completed: true },
-    { name: "Análisis de Proveedores (10 Vendedores)", pages: 8, completed: true },
-    { name: "Desglose y Comparación de Costos", pages: 4, completed: true },
-    { name: "Evaluación de Riesgos y Cumplimiento", pages: 6, completed: true },
-    { name: "Plan de Envío y Logística", pages: 3, completed: true },
-    { name: "Lista de Verificación de Documentación", pages: 2, completed: true }
+    { name: "Resumen Ejecutivo",                                pages: 2 },
+    { name: `Análisis de Proveedores (${leadStats.qualified} Vendedores)`, pages: 8 },
+    { name: "Desglose y Comparación de Costos",                 pages: 4 },
+    { name: "Evaluación de Riesgos y Cumplimiento",             pages: 6 },
+    { name: "Plan de Envío y Logística",                        pages: 3 },
+    { name: "Lista de Verificación de Documentación",           pages: 2 },
   ];
+
+  // ── Action: Download Full Report ──────────────────────────────────────────
+  const handleDownloadReport = () => {
+    generateReportPDF({
+      supplierName, quantity, price, destination, productType,
+      riskScore: stateRiskScore, costs, reportId, saveFile: true,
+    });
+  };
+
+  // ── Action: Excel Export ──────────────────────────────────────────────────
+  const handleExcelExport = () => {
+    exportToExcel({ supplierName, quantity, price, destination, productType, costs });
+  };
+
+  // ── Action: Schedule Call ─────────────────────────────────────────────────
+  const handleScheduleCall = () => {
+    // Open phone dialer with admin's number (configure in env)
+    const adminPhone = "+50212345678"; // ← Replace with real admin phone
+    window.location.href = `tel:${adminPhone}`;
+  };
+
+  // ── Action: Submit Quote Request ──────────────────────────────────────────
+  const handleQuoteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/email/quote`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name:         quoteName,
+            email:        quoteEmail,
+            phone:        quotePhone,
+            company:      quoteCompany,
+            message:      quoteMessage,
+            supplierName, totalCost: costs.totalCost,
+            productType,  quantity, destination,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed");
+      alert("¡Solicitud enviada con éxito! Nuestro equipo te contactará pronto.");
+      setShowQuoteModal(false);
+      setQuoteName(""); setQuoteEmail(""); setQuotePhone(""); setQuoteCompany(""); setQuoteMessage("");
+    } catch (err) {
+      alert("⚠️ No se pudo enviar. Por favor intenta de nuevo o contáctanos directamente.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ── Action: Email Report ──────────────────────────────────────────────────
+  const handleEmailReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      // Generate PDF as base64
+      const pdfBase64 = generateReportPDF({
+        supplierName, quantity, price, destination, productType,
+        riskScore: stateRiskScore, costs, reportId, saveFile: false,
+      });
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/email/report`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientEmail: emailRecipient,
+            recipientName:  emailRecipientName,
+            pdfBase64,
+            supplierName,
+            totalCost: costs.totalCost,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed");
+      alert("✅ ¡Informe enviado a tu correo!");
+      setShowEmailModal(false);
+      setEmailRecipient(""); setEmailRecipientName("");
+    } catch (err) {
+      alert("⚠️ No se pudo enviar el informe. Por favor intenta de nuevo.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-blue-50">
@@ -48,16 +353,29 @@ export function FinalCTA() {
       </nav>
 
       <div className="max-w-5xl mx-auto px-6 py-12">
-        {/* Success Message */}
+        {/* Success */}
         <div className="text-center mb-12">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
           <h1 className="text-4xl font-bold text-[#0B3C5D] mb-3">{t("final.complete")}</h1>
-          <p className="text-xl text-slate-600">{t("final.analyzed")} {leadStats.totalAnalyzed} {t("final.suppliers")} {leadStats.qualified} {t("final.qualifiedLeads")}</p>
+          <p className="text-xl text-slate-600">
+            {t("final.analyzed")} {leadStats.totalAnalyzed} {t("final.suppliers")} {leadStats.qualified} {t("final.qualifiedLeads")}
+          </p>
+          <p className="text-xs mt-2">
+            {isLiveData ? (
+              <span className="text-green-600 font-medium">
+                ✅ Análisis basado en proveedor real: {supplierName}
+              </span>
+            ) : (
+              <span className="text-yellow-600 font-medium">
+                ⚠️ Mostrando datos de ejemplo
+              </span>
+            )}
+          </p>
         </div>
 
-        {/* Lead Generation Stats */}
+        {/* Dynamic Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 text-center">
             <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
@@ -90,31 +408,35 @@ export function FinalCTA() {
             </div>
             <div className="text-right">
               <div className="text-sm text-slate-600 mb-1">{t("final.reportID")}</div>
-              <div className="font-mono text-[#0B3C5D] font-semibold">#SEAL-2026-0419</div>
+              <div className="font-mono text-[#0B3C5D] font-semibold">#{reportId}</div>
             </div>
           </div>
 
-          {/* Key Findings */}
+          {/* Dynamic Key Findings */}
           <div className="grid md:grid-cols-3 gap-4 mb-8">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
               <div className="text-sm text-blue-700 mb-2">{t("final.bestSupplier")}</div>
-              <div className="font-bold text-xl text-[#0B3C5D] mb-1">Foshan Elite</div>
+              <div className="font-bold text-xl text-[#0B3C5D] mb-1 truncate">
+                {supplierName.split(" ").slice(0, 2).join(" ")}
+              </div>
               <div className="flex items-center gap-1 text-sm text-blue-700">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                4.9 calificación • Verificado
+                {stateSupplier?.rating ?? 4.9} • {stateSupplier?.verified ? "Verificado" : "Estándar"}
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
               <div className="text-sm text-green-700 mb-2">{t("final.totalCost")}</div>
-              <div className="font-bold text-xl text-[#0B3C5D] mb-1">$46,500</div>
-              <div className="text-sm text-green-700">$46.50 por unidad</div>
+              <div className="font-bold text-xl text-[#0B3C5D] mb-1">
+                ${costs.totalCost.toLocaleString()}
+              </div>
+              <div className="text-sm text-green-700">${costs.perUnit} por unidad</div>
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
               <div className="text-sm text-purple-700 mb-2">{t("final.riskLevel")}</div>
-              <div className="font-bold text-xl text-[#0B3C5D] mb-1">BAJO</div>
-              <div className="text-sm text-purple-700">32/100 {t("final.riskScore")}</div>
+              <div className={`font-bold text-xl ${riskColor} mb-1`}>{riskLevel}</div>
+              <div className="text-sm text-purple-700">{stateRiskScore}/100 {t("final.riskScore")}</div>
             </div>
           </div>
 
@@ -134,81 +456,15 @@ export function FinalCTA() {
             </div>
           </div>
 
-          {/* Download Buttons */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <button className="py-4 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center justify-center gap-3 font-semibold">
-              <Download className="w-5 h-5" />
-              {t("final.downloadReport")}
-            </button>
-            <button
-              onClick={() => setShowLeadExport(true)}
-              className="py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all flex items-center justify-center gap-3 font-semibold"
-            >
-              <Users className="w-5 h-5" />
-              {t("final.exportLeads")} {leadStats.qualified}
-            </button>
-          </div>
+          {/* ✅ Single Download Button (Export Leads removed) */}
+          <button
+            onClick={handleDownloadReport}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center justify-center gap-3 font-semibold shadow-lg hover:shadow-xl"
+          >
+            <Download className="w-5 h-5" />
+            {t("final.downloadReport")}
+          </button>
         </div>
-
-        {/* Lead Export Success Modal */}
-        {showLeadExport && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-10 h-10 text-green-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-[#0B3C5D] mb-2">{t("final.leadsExported")}</h2>
-                <p className="text-slate-600">
-                  {leadStats.qualified} {t("final.leadsExportedDesc")}
-                </p>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-                <h3 className="font-semibold text-[#0B3C5D] mb-4">{t("final.exportIncludes")}</h3>
-                <ul className="space-y-2 text-sm text-slate-700">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>{t("final.include1")}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>{t("final.include2")}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>{t("final.include3")}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>{t("final.include4")}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>{t("final.include5")}</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="space-y-3">
-                <button className="w-full px-6 py-3 bg-[#0B3C5D] text-white rounded-lg hover:bg-[#0a2f47] transition-all font-semibold flex items-center justify-center gap-2">
-                  <Download className="w-5 h-5" />
-                  {t("final.downloadCSV")}
-                </button>
-                <button className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-semibold flex items-center justify-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  {t("final.emailLeads")}
-                </button>
-                <button
-                  onClick={() => setShowLeadExport(false)}
-                  className="w-full px-6 py-3 border-2 border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-all"
-                >
-                  {t("final.close")}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* SEAL Service CTA */}
         <div className="relative overflow-hidden bg-gradient-to-r from-[#0B3C5D] via-blue-900 to-purple-900 rounded-3xl shadow-2xl p-10 text-white mb-8">
@@ -218,16 +474,14 @@ export function FinalCTA() {
           <div className="relative z-10">
             <div className="text-center mb-10">
               <h2 className="text-4xl font-bold mb-4 drop-shadow-lg">{t("final.sealTitle")}</h2>
-              <p className="text-blue-100 text-xl max-w-2xl mx-auto">
-                {t("final.sealSubtitle")}
-              </p>
+              <p className="text-blue-100 text-xl max-w-2xl mx-auto">{t("final.sealSubtitle")}</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6 mb-10">
               {[
-                { titleKey: "final.negotiation", descKey: "final.negotiationDesc", icon: "💰" },
-                { titleKey: "final.qualityControl", descKey: "final.qualityControlDesc", icon: "✓" },
-                { titleKey: "final.fullLogistics", descKey: "final.fullLogisticsDesc", icon: "🚢" }
+                { titleKey: "final.negotiation",    descKey: "final.negotiationDesc",    icon: "💰" },
+                { titleKey: "final.qualityControl", descKey: "final.qualityControlDesc", icon: "✓"  },
+                { titleKey: "final.fullLogistics",  descKey: "final.fullLogisticsDesc",  icon: "🚢" },
               ].map((service, i) => (
                 <div key={i} className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/30 hover:bg-white/20 transition-all shadow-xl">
                   <div className="text-3xl mb-3">{service.icon}</div>
@@ -238,11 +492,19 @@ export function FinalCTA() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="flex-1 py-4 bg-white text-[#0B3C5D] rounded-xl hover:bg-blue-50 transition-all font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl hover:scale-105">
+              {/* Request Quote — opens modal */}
+              <button
+                onClick={() => setShowQuoteModal(true)}
+                className="flex-1 py-4 bg-white text-[#0B3C5D] rounded-xl hover:bg-blue-50 transition-all font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl hover:scale-105"
+              >
                 <Mail className="w-5 h-5" />
                 {t("final.requestQuote")}
               </button>
-              <button className="flex-1 py-4 bg-white/20 backdrop-blur-sm border-2 border-white text-white rounded-xl hover:bg-white/30 transition-all font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl hover:scale-105">
+              {/* Schedule Call — opens phone dialer */}
+              <button
+                onClick={handleScheduleCall}
+                className="flex-1 py-4 bg-white/20 backdrop-blur-sm border-2 border-white text-white rounded-xl hover:bg-white/30 transition-all font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl hover:scale-105"
+              >
                 <Phone className="w-5 h-5" />
                 {t("final.scheduleCall")}
               </button>
@@ -258,11 +520,17 @@ export function FinalCTA() {
               {t("final.exportTitle")}
             </h3>
             <div className="space-y-3">
-              <button className="w-full py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+              <button
+                onClick={handleExcelExport}
+                className="w-full py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+              >
                 <Download className="w-4 h-4" />
                 {t("final.downloadExcel")}
               </button>
-              <button className="w-full py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+              <button
+                onClick={() => setShowEmailModal(true)}
+                className="w-full py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+              >
                 <Mail className="w-4 h-4" />
                 {t("final.emailReport")}
               </button>
@@ -275,22 +543,10 @@ export function FinalCTA() {
               {t("final.nextSteps")}
             </h3>
             <ul className="space-y-3 text-sm text-slate-700">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                <span>{t("final.step1")}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                <span>{t("final.step2")}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                <span>{t("final.step3")}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                <span>{t("final.step4")}</span>
-              </li>
+              <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" /><span>{t("final.step1")}</span></li>
+              <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" /><span>{t("final.step2")}</span></li>
+              <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" /><span>{t("final.step3")}</span></li>
+              <li className="flex items-start gap-2"><CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" /><span>{t("final.step4")}</span></li>
             </ul>
           </div>
         </div>
@@ -305,6 +561,83 @@ export function FinalCTA() {
           </button>
         </div>
       </div>
+
+      {/* ── Quote Request Modal ─────────────────────────────────────────────── */}
+      {showQuoteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-[#0B3C5D]">Solicitar Cotización</h2>
+              <button onClick={() => setShowQuoteModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-5 text-sm">
+              <p className="font-semibold text-[#0B3C5D]">{supplierName}</p>
+              <p className="text-slate-600 mt-1">
+                {quantity.toLocaleString()} unidades • Total estimado: ${costs.totalCost.toLocaleString()}
+              </p>
+            </div>
+
+            <form onSubmit={handleQuoteSubmit} className="space-y-4">
+              <input type="text" required placeholder="Nombre completo *" value={quoteName}
+                onChange={(e) => setQuoteName(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="email" required placeholder="Email *" value={quoteEmail}
+                onChange={(e) => setQuoteEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="tel" placeholder="Teléfono" value={quotePhone}
+                onChange={(e) => setQuotePhone(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="text" placeholder="Empresa" value={quoteCompany}
+                onChange={(e) => setQuoteCompany(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <textarea placeholder="Mensaje adicional (opcional)" value={quoteMessage}
+                onChange={(e) => setQuoteMessage(e.target.value)} rows={4}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+
+              <button type="submit" disabled={submitting}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-lg hover:from-blue-700 hover:to-[#0a2f47] transition-all font-semibold disabled:opacity-60">
+                {submitting ? "Enviando..." : "Enviar Solicitud"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Email Report Modal ──────────────────────────────────────────────── */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-[#0B3C5D]">Enviar Informe por Email</h2>
+              <button onClick={() => setShowEmailModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-600 mb-5">
+              Te enviaremos el informe completo en PDF a tu correo.
+            </p>
+
+            <form onSubmit={handleEmailReport} className="space-y-4">
+              <input type="text" placeholder="Tu nombre" value={emailRecipientName}
+                onChange={(e) => setEmailRecipientName(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <input type="email" required placeholder="tu@email.com *" value={emailRecipient}
+                onChange={(e) => setEmailRecipient(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+              <button type="submit" disabled={submitting}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-lg hover:from-blue-700 hover:to-[#0a2f47] transition-all font-semibold disabled:opacity-60 flex items-center justify-center gap-2">
+                <Mail className="w-5 h-5" />
+                {submitting ? "Enviando..." : "Enviar Informe"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
