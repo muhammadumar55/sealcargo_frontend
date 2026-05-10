@@ -30,7 +30,7 @@ import {
   drawCompanyInfoBox,
   drawCompanyFooter,
   generateBeautifulExcel,
-} from "../utils/reportExports";
+} from "../../utils/reportExports";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DUTY_RATES: Record<string, number> = {
