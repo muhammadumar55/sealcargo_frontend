@@ -1,0 +1,405 @@
+import ExcelJS from "exceljs";
+
+// ─── SEAL Company Info ────────────────────────────────────────────────────────
+export const SEAL_COMPANY = {
+  name:    "SEAL - AGENCIA DE CARGA Y LOGISTICA",
+  address: "Calzada Roosevelt 33-86, Cdad. de Guatemala 01007, Guatemala",
+  phone:   "+502 5996 4664",
+  website: "SEAL SmartTrade AI",
+};
+
+// ─── PDF helper: draw company header (call after main header) ────────────────
+export function drawCompanyInfoBox(
+  doc: any,
+  pageWidth: number,
+  yStart: number = 40
+): number {
+  // Light grey company info bar below main header
+  doc.setFillColor(241, 245, 249); // slate-100
+  doc.rect(0, yStart, pageWidth, 14, "F");
+
+  doc.setTextColor(11, 60, 93);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text(SEAL_COMPANY.name, 14, yStart + 5);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(71, 85, 105); // slate-600
+  doc.text(SEAL_COMPANY.address, 14, yStart + 9);
+  doc.text(`Tel: ${SEAL_COMPANY.phone}`, 14, yStart + 12.5);
+
+  return yStart + 14; // return next Y position
+}
+
+// ─── PDF footer with company info ────────────────────────────────────────────
+export function drawCompanyFooter(doc: any) {
+  const pageWidth  = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // Footer background
+  doc.setFillColor(11, 60, 93);
+  doc.rect(0, pageHeight - 22, pageWidth, 22, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text(SEAL_COMPANY.name, pageWidth / 2, pageHeight - 16, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(191, 219, 254); // blue-200
+  doc.text(SEAL_COMPANY.address, pageWidth / 2, pageHeight - 11, { align: "center" });
+  doc.text(`Tel: ${SEAL_COMPANY.phone}  |  ${SEAL_COMPANY.website}`,
+    pageWidth / 2, pageHeight - 6, { align: "center" });
+
+  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(6);
+  doc.text(
+    "Este análisis es una estimación. Los costos reales pueden variar.",
+    pageWidth / 2, pageHeight - 1.5, { align: "center" }
+  );
+}
+
+// ─── Beautiful Excel Generator ───────────────────────────────────────────────
+export interface ExcelExportData {
+  reportTitle:  string;
+  supplierName: string;
+  productType:  string;
+  destination:  string;
+  quantity:     number;
+  price:        number;
+  costs: {
+    productCost:  number;
+    shipping:     number;
+    importDuties: number;
+    taxes:        number;
+    insurance:    number;
+    totalCost:    number;
+    perUnit:      number;
+    dutyRate:     number;
+  };
+  vatRate:       number;
+  insuranceRate: number;
+}
+
+export async function generateBeautifulExcel(data: ExcelExportData): Promise<void> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator       = SEAL_COMPANY.name;
+  wb.lastModifiedBy = SEAL_COMPANY.name;
+  wb.created       = new Date();
+
+  const ws = wb.addWorksheet("Análisis de Costos", {
+    properties: { defaultColWidth: 18 },
+    pageSetup:  { paperSize: 9, orientation: "portrait" },
+  });
+
+  // ─── Column widths ───
+  ws.columns = [
+    { width: 30 },
+    { width: 40 },
+    { width: 18 },
+    { width: 14 },
+  ];
+
+  // ═══ COMPANY HEADER (rows 1-4) ═══════════════════════════════════════════
+  ws.mergeCells("A1:D1");
+  const titleCell = ws.getCell("A1");
+  titleCell.value = SEAL_COMPANY.name;
+  titleCell.font  = { name: "Arial", size: 16, bold: true, color: { argb: "FFFFFFFF" } };
+  titleCell.alignment = { vertical: "middle", horizontal: "center" };
+  titleCell.fill = {
+    type: "pattern", pattern: "solid",
+    fgColor: { argb: "FF0B3C5D" },
+  };
+  ws.getRow(1).height = 28;
+
+  ws.mergeCells("A2:D2");
+  const addrCell = ws.getCell("A2");
+  addrCell.value = SEAL_COMPANY.address;
+  addrCell.font  = { name: "Arial", size: 10, color: { argb: "FFBFDBFE" } };
+  addrCell.alignment = { vertical: "middle", horizontal: "center" };
+  addrCell.fill = {
+    type: "pattern", pattern: "solid",
+    fgColor: { argb: "FF0B3C5D" },
+  };
+  ws.getRow(2).height = 18;
+
+  ws.mergeCells("A3:D3");
+  const phoneCell = ws.getCell("A3");
+  phoneCell.value = `Tel: ${SEAL_COMPANY.phone}  |  ${SEAL_COMPANY.website}`;
+  phoneCell.font  = { name: "Arial", size: 10, color: { argb: "FFBFDBFE" } };
+  phoneCell.alignment = { vertical: "middle", horizontal: "center" };
+  phoneCell.fill = {
+    type: "pattern", pattern: "solid",
+    fgColor: { argb: "FF0B3C5D" },
+  };
+  ws.getRow(3).height = 16;
+
+  // ═══ REPORT TITLE (row 5) ═══════════════════════════════════════════════
+  ws.mergeCells("A5:D5");
+  const reportTitleCell = ws.getCell("A5");
+  reportTitleCell.value = data.reportTitle.toUpperCase();
+  reportTitleCell.font  = { name: "Arial", size: 14, bold: true, color: { argb: "FF0B3C5D" } };
+  reportTitleCell.alignment = { vertical: "middle", horizontal: "center" };
+  reportTitleCell.fill = {
+    type: "pattern", pattern: "solid",
+    fgColor: { argb: "FFEFF6FF" },
+  };
+  ws.getRow(5).height = 26;
+
+  ws.mergeCells("A6:D6");
+  const dateCell = ws.getCell("A6");
+  dateCell.value = `Generado: ${new Date().toLocaleDateString("es-ES", {
+    year: "numeric", month: "long", day: "numeric",
+  })}`;
+  dateCell.font  = { name: "Arial", size: 9, italic: true, color: { argb: "FF64748B" } };
+  dateCell.alignment = { vertical: "middle", horizontal: "center" };
+  ws.getRow(6).height = 16;
+
+  // Empty row
+  ws.getRow(7).height = 8;
+
+  // ═══ ORDER DETAILS (rows 8-13) ═══════════════════════════════════════════
+  ws.mergeCells("A8:D8");
+  const detailsHeader = ws.getCell("A8");
+  detailsHeader.value = "DETALLES DEL PEDIDO";
+  detailsHeader.font  = { name: "Arial", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+  detailsHeader.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+  detailsHeader.fill = {
+    type: "pattern", pattern: "solid",
+    fgColor: { argb: "FF3B82F6" },
+  };
+  ws.getRow(8).height = 22;
+
+  const orderRows = [
+    ["Proveedor:",          data.supplierName],
+    ["Tipo de Producto:",   data.productType],
+    ["País de Destino:",    data.destination],
+    ["Cantidad:",           `${data.quantity.toLocaleString()} unidades`],
+    ["Precio Unitario:",    `$${Number(data.price).toFixed(2)}`],
+  ];
+
+  orderRows.forEach((row, i) => {
+    const rowNum = 9 + i;
+    ws.mergeCells(`A${rowNum}:B${rowNum}`);
+    ws.mergeCells(`C${rowNum}:D${rowNum}`);
+    const labelCell = ws.getCell(`A${rowNum}`);
+    const valueCell = ws.getCell(`C${rowNum}`);
+
+    labelCell.value = row[0];
+    labelCell.font  = { name: "Arial", size: 10, bold: true, color: { argb: "FF0B3C5D" } };
+    labelCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+    labelCell.fill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FFF1F5F9" },
+    };
+
+    valueCell.value = row[1];
+    valueCell.font  = { name: "Arial", size: 10, color: { argb: "FF1E293B" } };
+    valueCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+
+    ws.getRow(rowNum).height = 20;
+
+    // Border
+    [labelCell, valueCell].forEach(cell => {
+      cell.border = {
+        top:    { style: "thin", color: { argb: "FFCBD5E1" } },
+        bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+        left:   { style: "thin", color: { argb: "FFCBD5E1" } },
+        right:  { style: "thin", color: { argb: "FFCBD5E1" } },
+      };
+    });
+  });
+
+  // Empty row
+  ws.getRow(14).height = 12;
+
+  // ═══ COST BREAKDOWN TABLE ═══════════════════════════════════════════════
+  // Header row 15
+  const headers = ["CONCEPTO", "DETALLE", "MONTO (USD)", "% DEL TOTAL"];
+  headers.forEach((header, i) => {
+    const cell = ws.getRow(15).getCell(i + 1);
+    cell.value = header;
+    cell.font = { name: "Arial", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+    cell.fill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FF0B3C5D" },
+    };
+    cell.border = {
+      top:    { style: "medium", color: { argb: "FF000000" } },
+      bottom: { style: "medium", color: { argb: "FF000000" } },
+      left:   { style: "thin",   color: { argb: "FF000000" } },
+      right:  { style: "thin",   color: { argb: "FF000000" } },
+    };
+  });
+  ws.getRow(15).height = 26;
+
+  // Data rows 16-20
+  const dataRows = [
+    {
+      concept: "Costo de Producto",
+      detail:  `${data.quantity.toLocaleString()} unidades × $${Number(data.price).toFixed(2)}`,
+      amount:  data.costs.productCost,
+    },
+    {
+      concept: "Flete Marítimo",
+      detail:  `Envío a ${data.destination} (~25 días tránsito)`,
+      amount:  data.costs.shipping,
+    },
+    {
+      concept: "Aranceles de Importación",
+      detail:  `Tasa ${(data.costs.dutyRate * 100).toFixed(0)}% para ${data.productType}`,
+      amount:  data.costs.importDuties,
+    },
+    {
+      concept: "IVA & Impuestos",
+      detail:  `IVA ${(data.vatRate * 100).toFixed(0)}% sobre producto + aranceles`,
+      amount:  data.costs.taxes,
+    },
+    {
+      concept: "Seguro de Carga",
+      detail:  `Cobertura completa (${(data.insuranceRate * 100).toFixed(0)}% del valor)`,
+      amount:  data.costs.insurance,
+    },
+  ];
+
+  dataRows.forEach((row, i) => {
+    const rowNum = 16 + i;
+    const isAlt  = i % 2 === 1;
+    const fillColor = isAlt ? "FFEFF6FF" : "FFFFFFFF";
+
+    const conceptCell = ws.getRow(rowNum).getCell(1);
+    const detailCell  = ws.getRow(rowNum).getCell(2);
+    const amountCell  = ws.getRow(rowNum).getCell(3);
+    const percentCell = ws.getRow(rowNum).getCell(4);
+
+    conceptCell.value = row.concept;
+    conceptCell.font  = { name: "Arial", size: 10, bold: true, color: { argb: "FF0B3C5D" } };
+    conceptCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+
+    detailCell.value = row.detail;
+    detailCell.font  = { name: "Arial", size: 9, color: { argb: "FF475569" } };
+    detailCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+
+    amountCell.value     = row.amount;
+    amountCell.numFmt    = '"$"#,##0';
+    amountCell.font      = { name: "Arial", size: 10, bold: true, color: { argb: "FF0B3C5D" } };
+    amountCell.alignment = { vertical: "middle", horizontal: "right", indent: 1 };
+
+    const pct = (row.amount / data.costs.totalCost);
+    percentCell.value     = pct;
+    percentCell.numFmt    = "0.0%";
+    percentCell.font      = { name: "Arial", size: 10, color: { argb: "FF64748B" } };
+    percentCell.alignment = { vertical: "middle", horizontal: "center" };
+
+    [conceptCell, detailCell, amountCell, percentCell].forEach(cell => {
+      cell.fill = {
+        type: "pattern", pattern: "solid",
+        fgColor: { argb: fillColor },
+      };
+      cell.border = {
+        top:    { style: "thin", color: { argb: "FFCBD5E1" } },
+        bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+        left:   { style: "thin", color: { argb: "FFCBD5E1" } },
+        right:  { style: "thin", color: { argb: "FFCBD5E1" } },
+      };
+    });
+
+    ws.getRow(rowNum).height = 22;
+  });
+
+  // ═══ TOTAL ROW (row 21) ═══════════════════════════════════════════════════
+  const totalRowNum = 21;
+  const totalConceptCell = ws.getRow(totalRowNum).getCell(1);
+  const totalDetailCell  = ws.getRow(totalRowNum).getCell(2);
+  const totalAmountCell  = ws.getRow(totalRowNum).getCell(3);
+  const totalPctCell     = ws.getRow(totalRowNum).getCell(4);
+
+  totalConceptCell.value = "COSTO TOTAL LANDED";
+  totalDetailCell.value  = `${data.quantity.toLocaleString()} unidades`;
+  totalAmountCell.value  = data.costs.totalCost;
+  totalAmountCell.numFmt = '"$"#,##0';
+  totalPctCell.value     = "100%";
+
+  [totalConceptCell, totalDetailCell, totalAmountCell, totalPctCell].forEach((cell, i) => {
+    cell.font = { name: "Arial", size: 12, bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FF3B82F6" },
+    };
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: i === 2 ? "right" : (i === 3 ? "center" : "left"),
+      indent: i === 2 ? 1 : (i === 3 ? 0 : 1),
+    };
+    cell.border = {
+      top:    { style: "medium", color: { argb: "FF000000" } },
+      bottom: { style: "medium", color: { argb: "FF000000" } },
+      left:   { style: "thin",   color: { argb: "FF000000" } },
+      right:  { style: "thin",   color: { argb: "FF000000" } },
+    };
+  });
+  ws.getRow(totalRowNum).height = 28;
+
+  // ═══ PER UNIT ROW (row 22) ════════════════════════════════════════════════
+  const perUnitRowNum = 22;
+  ws.mergeCells(`A${perUnitRowNum}:B${perUnitRowNum}`);
+  const perUnitLabel = ws.getCell(`A${perUnitRowNum}`);
+  const perUnitValue = ws.getCell(`C${perUnitRowNum}`);
+  const perUnitEmpty = ws.getCell(`D${perUnitRowNum}`);
+
+  perUnitLabel.value = "COSTO POR UNIDAD";
+  perUnitValue.value = data.costs.perUnit;
+  perUnitValue.numFmt = '"$"#,##0.00';
+
+  [perUnitLabel, perUnitValue, perUnitEmpty].forEach((cell, i) => {
+    cell.font = { name: "Arial", size: 11, bold: true, color: { argb: "FF0B3C5D" } };
+    cell.fill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FFDBEAFE" },
+    };
+    cell.alignment = {
+      vertical: "middle",
+      horizontal: i === 1 ? "right" : "left",
+      indent: 1,
+    };
+    cell.border = {
+      top:    { style: "thin", color: { argb: "FFCBD5E1" } },
+      bottom: { style: "medium", color: { argb: "FF0B3C5D" } },
+      left:   { style: "thin", color: { argb: "FFCBD5E1" } },
+      right:  { style: "thin", color: { argb: "FFCBD5E1" } },
+    };
+  });
+  ws.getRow(perUnitRowNum).height = 24;
+
+  // ═══ FOOTER (rows 24-25) ══════════════════════════════════════════════════
+  ws.mergeCells("A24:D24");
+  const footerCell = ws.getCell("A24");
+  footerCell.value = "Este análisis es una estimación. Los costos reales pueden variar.";
+  footerCell.font  = { name: "Arial", size: 9, italic: true, color: { argb: "FF64748B" } };
+  footerCell.alignment = { vertical: "middle", horizontal: "center" };
+  ws.getRow(24).height = 18;
+
+  ws.mergeCells("A25:D25");
+  const footerCell2 = ws.getCell("A25");
+  footerCell2.value = `${SEAL_COMPANY.name}  •  ${SEAL_COMPANY.phone}`;
+  footerCell2.font  = { name: "Arial", size: 9, bold: true, color: { argb: "FF0B3C5D" } };
+  footerCell2.alignment = { vertical: "middle", horizontal: "center" };
+  ws.getRow(25).height = 18;
+
+  // ─── Save file ───
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob   = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url    = URL.createObjectURL(blob);
+  const link   = document.createElement("a");
+  link.href     = url;
+  link.download = `SEAL_${data.reportTitle.replace(/\s+/g, "_")}_${data.supplierName.replace(/\s+/g, "_")}_${Date.now()}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

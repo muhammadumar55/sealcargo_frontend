@@ -12,63 +12,44 @@ import autoTable from "jspdf-autotable";
 import logo from "../../imports/ChatGPT_Image_Apr_27,_2026,_10_59_16_AM.png";
 import { useLanguage } from "../context/LanguageContext";
 import { LanguageToggle } from "./LanguageToggle";
+import {
+  SEAL_COMPANY,
+  drawCompanyInfoBox,
+  drawCompanyFooter,
+  generateBeautifulExcel,
+} from "../utils/reportExports";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DUTY_RATES: Record<string, number> = {
-  furniture:   0.06,
-  electronics: 0.00,
-  textiles:    0.12,
-  machinery:   0.02,
-  other:       0.05,
+  furniture: 0.06, electronics: 0.00, textiles: 0.12, machinery: 0.02, other: 0.05,
 };
-
 const SHIPPING_COSTS: Record<string, number> = {
-  US:    4200,
-  GT:    3800,
-  MX:    3500,
-  CA:    4800,
-  other: 5000,
+  US: 4200, GT: 3800, MX: 3500, CA: 4800, other: 5000,
 };
-
-// ✅ Client-specified rates
-const VAT_RATE       = 0.12;  // IVA 12%
-const INSURANCE_RATE = 0.01;  // Seguro 1%
+const VAT_RATE       = 0.12;
+const INSURANCE_RATE = 0.01;
 
 // ─── Calculate all costs ──────────────────────────────────────────────────────
-function calculateCosts(
-  price: number,
-  quantity: number,
-  destination: string,
-  productType: string
-) {
+function calculateCosts(price: number, quantity: number, destination: string, productType: string) {
   const productCost  = Math.round(price * quantity);
   const shipping     = SHIPPING_COSTS[destination] || 4200;
   const dutyRate     = DUTY_RATES[productType] || 0.06;
   const importDuties = Math.round(productCost * dutyRate);
-  const taxes        = Math.round((productCost + importDuties) * VAT_RATE);       // IVA 12%
-  const insurance    = Math.round(productCost * INSURANCE_RATE);                  // Seguro 1%
+  const taxes        = Math.round((productCost + importDuties) * VAT_RATE);
+  const insurance    = Math.round(productCost * INSURANCE_RATE);
   const totalCost    = productCost + shipping + importDuties + taxes + insurance;
-
   return {
-    productCost,
-    shipping,
-    importDuties,
-    taxes,
-    insurance,
-    totalCost,
-    perUnit:  parseFloat((totalCost / quantity).toFixed(2)),
+    productCost, shipping, importDuties, taxes, insurance, totalCost,
+    perUnit: parseFloat((totalCost / quantity).toFixed(2)),
     dutyRate,
   };
 }
 
-// ─── PDF Export ───────────────────────────────────────────────────────────────
+// ─── PDF Export (with company info) ───────────────────────────────────────────
 function exportToPDF(
   costs: ReturnType<typeof calculateCosts>,
-  supplierName: string,
-  quantity: number,
-  price: number,
-  destination: string,
-  productType: string
+  supplierName: string, quantity: number, price: number,
+  destination: string, productType: string
 ) {
   const doc       = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -76,7 +57,7 @@ function exportToPDF(
     year: "numeric", month: "long", day: "numeric",
   });
 
-  // Header
+  // Main header
   doc.setFillColor(11, 60, 93);
   doc.rect(0, 0, pageWidth, 40, "F");
   doc.setTextColor(255, 255, 255);
@@ -88,29 +69,32 @@ function exportToPDF(
   doc.text("Análisis de Costos de Importación", 14, 26);
   doc.text(`Generado: ${now}`, 14, 34);
 
-  // Supplier info box
+  // Company info bar (NEW)
+  const yAfterCompany = drawCompanyInfoBox(doc, pageWidth, 40);
+
+  // Order details box
   doc.setTextColor(11, 60, 93);
   doc.setFillColor(239, 246, 255);
-  doc.rect(14, 48, pageWidth - 28, 28, "F");
+  doc.rect(14, yAfterCompany + 6, pageWidth - 28, 28, "F");
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text("DETALLES DEL PEDIDO", 18, 58);
+  doc.text("DETALLES DEL PEDIDO", 18, yAfterCompany + 16);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`Proveedor: ${supplierName}`,                                      18, 66);
-  doc.text(`Producto: ${productType}  |  Destino: ${destination}`,            18, 72);
-  doc.text(`Cantidad: ${quantity.toLocaleString()} unidades`,                100, 66);
-  doc.text(`Precio unitario: $${Number(price).toFixed(2)}`,                 100, 72);
+  doc.text(`Proveedor: ${supplierName}`,                            18, yAfterCompany + 24);
+  doc.text(`Producto: ${productType}  |  Destino: ${destination}`,  18, yAfterCompany + 30);
+  doc.text(`Cantidad: ${quantity.toLocaleString()} unidades`,      100, yAfterCompany + 24);
+  doc.text(`Precio unitario: $${Number(price).toFixed(2)}`,        100, yAfterCompany + 30);
 
   // Section title
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(11, 60, 93);
-  doc.text("Desglose de Costos", 14, 90);
+  doc.text("Desglose de Costos", 14, yAfterCompany + 48);
 
   // Cost table
   autoTable(doc, {
-    startY: 95,
+    startY: yAfterCompany + 53,
     head: [["Concepto", "Detalle", "Monto (USD)", "% del Total"]],
     body: [
       [
@@ -165,104 +149,26 @@ function exportToPDF(
   doc.setFont("helvetica", "bold");
   doc.text(
     `Costo por Unidad: $${costs.perUnit}  |  Total: $${costs.totalCost.toLocaleString()}`,
-    pageWidth / 2,
-    finalY + 11,
-    { align: "center" }
+    pageWidth / 2, finalY + 11, { align: "center" }
   );
 
-  // Footer
-  const pageHeight = doc.internal.pageSize.getHeight();
-  doc.setTextColor(150, 150, 150);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text(
-    "Este análisis es una estimación. Los costos reales pueden variar. SEAL SmartTrade AI © 2024",
-    pageWidth / 2,
-    pageHeight - 10,
-    { align: "center" }
-  );
+  // Company footer (NEW)
+  drawCompanyFooter(doc);
 
-  doc.save(
-    `SEAL_CostBreakdown_${supplierName.replace(/\s+/g, "_")}_${Date.now()}.pdf`
-  );
+  doc.save(`SEAL_CostBreakdown_${supplierName.replace(/\s+/g, "_")}_${Date.now()}.pdf`);
 }
 
-// ─── Excel Export (CSV) ───────────────────────────────────────────────────────
-function exportToExcel(
+// ─── Excel Export (NEW: Beautiful XLSX) ───────────────────────────────────────
+async function exportToExcel(
   costs: ReturnType<typeof calculateCosts>,
-  supplierName: string,
-  quantity: number,
-  price: number,
-  destination: string,
-  productType: string
+  supplierName: string, quantity: number, price: number,
+  destination: string, productType: string
 ) {
-  const now = new Date().toLocaleDateString("es-ES");
-
-  const rows = [
-    ["SEAL SmartTrade AI - Análisis de Costos de Importación"],
-    [`Generado:,${now}`],
-    [""],
-    ["DETALLES DEL PEDIDO"],
-    [`Proveedor:,${supplierName}`],
-    [`Producto:,${productType}`],
-    [`Destino:,${destination}`],
-    [`Cantidad:,${quantity}`],
-    [`Precio Unitario:,$${Number(price).toFixed(2)}`],
-    [""],
-    ["CONCEPTO,DETALLE,MONTO (USD),% DEL TOTAL"],
-    [
-      "Costo de Producto",
-      `${quantity} unidades × $${Number(price).toFixed(2)}`,
-      costs.productCost,
-      `${((costs.productCost / costs.totalCost) * 100).toFixed(1)}%`,
-    ].join(","),
-    [
-      "Flete Marítimo",
-      `Envío a ${destination} (~25 días)`,
-      costs.shipping,
-      `${((costs.shipping / costs.totalCost) * 100).toFixed(1)}%`,
-    ].join(","),
-    [
-      "Aranceles de Importación",
-      `Tasa ${(costs.dutyRate * 100).toFixed(0)}% para ${productType}`,
-      costs.importDuties,
-      `${((costs.importDuties / costs.totalCost) * 100).toFixed(1)}%`,
-    ].join(","),
-    [
-      "IVA & Impuestos",
-      `IVA ${(VAT_RATE * 100).toFixed(0)}% sobre producto + aranceles`,
-      costs.taxes,
-      `${((costs.taxes / costs.totalCost) * 100).toFixed(1)}%`,
-    ].join(","),
-    [
-      "Seguro de Carga",
-      `Cobertura completa (${(INSURANCE_RATE * 100).toFixed(0)}%)`,
-      costs.insurance,
-      `${((costs.insurance / costs.totalCost) * 100).toFixed(1)}%`,
-    ].join(","),
-    [""],
-    `COSTO TOTAL LANDED,,${costs.totalCost},100%`,
-    `COSTO POR UNIDAD,,${costs.perUnit},`,
-    [""],
-    ["Generado por SEAL SmartTrade AI"],
-  ];
-
-  const csvContent = rows
-    .map(row => (Array.isArray(row) ? row.join(",") : row))
-    .join("\n");
-
-  const BOM     = "\uFEFF";
-  const blob    = new Blob([BOM + csvContent], {
-    type: "text/csv;charset=utf-8;",
+  await generateBeautifulExcel({
+    reportTitle:  "Análisis de Costos de Importación",
+    supplierName, productType, destination, quantity, price,
+    costs, vatRate: VAT_RATE, insuranceRate: INSURANCE_RATE,
   });
-  const url     = URL.createObjectURL(blob);
-  const link    = document.createElement("a");
-  link.href     = url;
-  link.download = `SEAL_CostBreakdown_${supplierName.replace(/\s+/g, "_")}_${Date.now()}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -309,7 +215,7 @@ export function CostBreakdown() {
     {
       icon: DollarSign, labelKey: "cost.productCost",
       amount:  costs.productCost,
-      details: `${quantity.toLocaleString()} unidades × $${Number(price).toFixed(2)} por unidad`,
+      details: `${quantity.toLocaleString()} ${t("cost.units")} × $${Number(price).toFixed(2)} ${t("cost.perUnitLabel")}`,
       color:   "blue",
     },
     {
@@ -353,13 +259,11 @@ export function CostBreakdown() {
               onClick={() => navigate(-1)}
               className="px-5 py-2.5 border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
             >
-              ← Proveedores
+              {t("cost.backToSuppliers")}
             </button>
 
             <button
-              onClick={() =>
-                exportToPDF(costs, supplierName, quantity, price, destination, productType)
-              }
+              onClick={() => exportToPDF(costs, supplierName, quantity, price, destination, productType)}
               className="px-5 py-2.5 border-2 border-red-300 text-red-700 rounded-xl hover:bg-red-50 transition-all flex items-center gap-2 shadow-sm hover:shadow-md"
             >
               <Download className="w-4 h-4" />
@@ -367,13 +271,11 @@ export function CostBreakdown() {
             </button>
 
             <button
-              onClick={() =>
-                exportToExcel(costs, supplierName, quantity, price, destination, productType)
-              }
+              onClick={() => exportToExcel(costs, supplierName, quantity, price, destination, productType)}
               className="px-5 py-2.5 border-2 border-green-300 text-green-700 rounded-xl hover:bg-green-50 transition-all flex items-center gap-2 shadow-sm hover:shadow-md"
             >
               <Download className="w-4 h-4" />
-              Export Excel
+              {t("cost.exportExcel")}
             </button>
 
             <button
@@ -410,13 +312,11 @@ export function CostBreakdown() {
           <p className="text-xs mt-1 font-medium">
             {isLiveData ? (
               <span className="text-green-600">
-                ✅ Cálculo dinámico — {quantity.toLocaleString()} unidades ×
-                ${Number(price).toFixed(2)} → destino: {destination}
+                ✅ {t("cost.dynamicCalc")} — {quantity.toLocaleString()} {t("cost.units")} ×
+                ${Number(price).toFixed(2)} → {t("cost.destination")} {destination}
               </span>
             ) : (
-              <span className="text-yellow-600">
-                ⚠️ Estimados de demostración — selecciona un proveedor para cálculo real
-              </span>
+              <span className="text-yellow-600">⚠️ {t("cost.demoCalc")}</span>
             )}
           </p>
         </div>
@@ -431,8 +331,8 @@ export function CostBreakdown() {
                 ${costs.totalCost.toLocaleString()}
               </div>
               <div className="text-blue-100 text-lg">
-                {quantity.toLocaleString()} unidades •{" "}
-                <span className="font-bold text-white">${costs.perUnit} por unidad</span>
+                {quantity.toLocaleString()} {t("cost.units")} •{" "}
+                <span className="font-bold text-white">${costs.perUnit} {t("cost.perUnitLabel")}</span>
               </div>
             </div>
             <div className="w-36 h-36 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl">
@@ -516,9 +416,7 @@ export function CostBreakdown() {
 
           <div className="mt-6 pt-6 border-t-2 border-slate-200">
             <div className="flex items-center justify-between">
-              <div className="font-semibold text-xl text-[#0B3C5D]">
-                {t("cost.totalLandedCost")}
-              </div>
+              <div className="font-semibold text-xl text-[#0B3C5D]">{t("cost.totalLandedCost")}</div>
               <div className="text-3xl font-bold text-[#0B3C5D]">
                 ${costs.totalCost.toLocaleString()}
               </div>
@@ -541,9 +439,8 @@ export function CostBreakdown() {
               <li className="flex items-start gap-2">
                 <span className="text-green-500 mt-1">•</span>
                 <span>
-                  Precio por unidad ${costs.perUnit} es{" "}
-                  {costs.perUnit < budget / quantity ? "menor ✅" : "mayor ⚠️"} que
-                  el presupuesto por unidad de ${(budget / quantity).toFixed(2)}
+                  {t("cost.unitPrice")} ${costs.perUnit} {t("cost.is")}{" "}
+                  {costs.perUnit < budget / quantity ? t("cost.lower") : t("cost.higher")} {t("cost.than")} ${(budget / quantity).toFixed(2)}
                 </span>
               </li>
               <li className="flex items-start gap-2">
@@ -578,13 +475,11 @@ export function CostBreakdown() {
         {/* Download Full Report Button */}
         <div className="mt-8 flex justify-center">
           <button
-            onClick={() =>
-              exportToPDF(costs, supplierName, quantity, price, destination, productType)
-            }
+            onClick={() => exportToPDF(costs, supplierName, quantity, price, destination, productType)}
             className="px-10 py-4 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-2xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center gap-3 shadow-xl hover:shadow-2xl text-lg font-semibold"
           >
             <Download className="w-6 h-6" />
-            Descargar Informe Completo (PDF)
+            {t("cost.downloadFullReport")}
           </button>
         </div>
 

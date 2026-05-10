@@ -9,8 +9,14 @@ import autoTable from "jspdf-autotable";
 import logo from "../../imports/ChatGPT_Image_Apr_27,_2026,_10_59_16_AM.png";
 import { useLanguage } from "../context/LanguageContext";
 import { LanguageToggle } from "./LanguageToggle";
+import {
+  SEAL_COMPANY,
+  drawCompanyInfoBox,
+  drawCompanyFooter,
+  generateBeautifulExcel,
+} from "../utils/reportExports";
 
-// ─── Constants for cost calculation (must match CostBreakdown) ───────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 const DUTY_RATES: Record<string, number> = {
   furniture: 0.06, electronics: 0.00, textiles: 0.12, machinery: 0.02, other: 0.05,
 };
@@ -32,7 +38,7 @@ function calculateCosts(price: number, quantity: number, destination: string, pr
     perUnit: parseFloat((totalCost / quantity).toFixed(2)), dutyRate };
 }
 
-// ─── PDF Generation (returns base64 + saves) ─────────────────────────────────
+// ─── PDF Generation (with company info) ──────────────────────────────────────
 function generateReportPDF(data: {
   supplierName: string; quantity: number; price: number;
   destination: string; productType: string; riskScore: number;
@@ -40,10 +46,11 @@ function generateReportPDF(data: {
   reportId: string;
   saveFile?: boolean;
 }): string {
-  const doc = new jsPDF();
+  const doc       = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
-  const now = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+  const now       = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
 
+  // Main header
   doc.setFillColor(11, 60, 93);
   doc.rect(0, 0, pageWidth, 40, "F");
   doc.setTextColor(255, 255, 255);
@@ -55,24 +62,29 @@ function generateReportPDF(data: {
   doc.text("Informe Completo de Análisis de Importación", 14, 26);
   doc.text(`Generado: ${now}  |  ID: ${data.reportId}`, 14, 34);
 
+  // Company info bar (NEW)
+  const yAfterCompany = drawCompanyInfoBox(doc, pageWidth, 40);
+
+  // Executive summary
   doc.setTextColor(11, 60, 93);
   doc.setFillColor(239, 246, 255);
-  doc.rect(14, 48, pageWidth - 28, 32, "F");
+  doc.rect(14, yAfterCompany + 6, pageWidth - 28, 32, "F");
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("RESUMEN EJECUTIVO", 18, 58);
+  doc.text("RESUMEN EJECUTIVO", 18, yAfterCompany + 16);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text(`Mejor Proveedor:  ${data.supplierName}`, 18, 66);
-  doc.text(`Producto: ${data.productType}  |  Destino: ${data.destination}`, 18, 72);
-  doc.text(`Cantidad: ${data.quantity.toLocaleString()} uds  |  Precio: $${Number(data.price).toFixed(2)}/u`, 18, 78);
+  doc.text(`Mejor Proveedor:  ${data.supplierName}`, 18, yAfterCompany + 24);
+  doc.text(`Producto: ${data.productType}  |  Destino: ${data.destination}`, 18, yAfterCompany + 30);
+  doc.text(`Cantidad: ${data.quantity.toLocaleString()} uds  |  Precio: $${Number(data.price).toFixed(2)}/u`, 18, yAfterCompany + 36);
 
+  // Cost section
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("Desglose de Costos", 14, 92);
+  doc.text("Desglose de Costos", 14, yAfterCompany + 50);
 
   autoTable(doc, {
-    startY: 96,
+    startY: yAfterCompany + 54,
     head: [["Concepto", "Detalle", "Monto (USD)"]],
     body: [
       ["Costo de Producto",      `${data.quantity.toLocaleString()} × $${Number(data.price).toFixed(2)}`, `$${data.costs.productCost.toLocaleString()}`],
@@ -88,6 +100,7 @@ function generateReportPDF(data: {
     styles: { fontSize: 9 },
   });
 
+  // Risk section
   const finalY1 = (doc as any).lastAutoTable.finalY + 10;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
@@ -106,6 +119,7 @@ function generateReportPDF(data: {
   doc.setFont("helvetica", "bold");
   doc.text(`Nivel de Riesgo: ${riskLevel}  (${data.riskScore}/100)`, pageWidth / 2, finalY1 + 17, { align: "center" });
 
+  // Per unit summary
   const finalY2 = finalY1 + 36;
   doc.setFillColor(11, 60, 93);
   doc.rect(14, finalY2, pageWidth - 28, 18, "F");
@@ -117,14 +131,8 @@ function generateReportPDF(data: {
     pageWidth / 2, finalY2 + 11, { align: "center" }
   );
 
-  const pageHeight = doc.internal.pageSize.getHeight();
-  doc.setTextColor(150, 150, 150);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text(
-    "Este análisis es una estimación. Los costos reales pueden variar. SEAL SmartTrade AI © 2024",
-    pageWidth / 2, pageHeight - 10, { align: "center" }
-  );
+  // Company footer (NEW)
+  drawCompanyFooter(doc);
 
   if (data.saveFile) {
     doc.save(`SEAL_FullReport_${data.supplierName.replace(/\s+/g, "_")}_${Date.now()}.pdf`);
@@ -133,44 +141,23 @@ function generateReportPDF(data: {
   return doc.output("datauristring").split(",")[1];
 }
 
-// ─── Excel/CSV Export ────────────────────────────────────────────────────────
-function exportToExcel(data: {
+// ─── Excel Export (NEW: Beautiful XLSX) ───────────────────────────────────────
+async function exportToExcel(data: {
   supplierName: string; quantity: number; price: number;
   destination: string; productType: string;
   costs: ReturnType<typeof calculateCosts>;
 }) {
-  const now = new Date().toLocaleDateString("es-ES");
-  const rows = [
-    "SEAL SmartTrade AI - Informe Completo",
-    `Generado:,${now}`,
-    "",
-    "RESUMEN",
-    `Proveedor:,${data.supplierName}`,
-    `Producto:,${data.productType}`,
-    `Destino:,${data.destination}`,
-    `Cantidad:,${data.quantity}`,
-    `Precio Unitario:,$${Number(data.price).toFixed(2)}`,
-    "",
-    "CONCEPTO,DETALLE,MONTO (USD)",
-    `Costo de Producto,${data.quantity} × $${Number(data.price).toFixed(2)},${data.costs.productCost}`,
-    `Flete Marítimo,Envío a ${data.destination},${data.costs.shipping}`,
-    `Aranceles,${(data.costs.dutyRate * 100).toFixed(0)}% para ${data.productType},${data.costs.importDuties}`,
-    `IVA & Impuestos,IVA ${(VAT_RATE * 100).toFixed(0)}%,${data.costs.taxes}`,
-    `Seguro de Carga,${(INSURANCE_RATE * 100).toFixed(0)}% del valor,${data.costs.insurance}`,
-    "",
-    `COSTO TOTAL,,${data.costs.totalCost}`,
-    `COSTO POR UNIDAD,,${data.costs.perUnit}`,
-  ];
-  const csv  = rows.join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url  = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href     = url;
-  link.download = `SEAL_FullReport_${data.supplierName.replace(/\s+/g, "_")}_${Date.now()}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  await generateBeautifulExcel({
+    reportTitle:  "Informe Completo de Análisis",
+    supplierName: data.supplierName,
+    productType:  data.productType,
+    destination:  data.destination,
+    quantity:     data.quantity,
+    price:        data.price,
+    costs:        data.costs,
+    vatRate:      VAT_RATE,
+    insuranceRate: INSURANCE_RATE,
+  });
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -246,14 +233,13 @@ export function FinalCTA() {
   };
 
   // ── Action: Excel Export ──────────────────────────────────────────────────
-  const handleExcelExport = () => {
-    exportToExcel({ supplierName, quantity, price, destination, productType, costs });
+  const handleExcelExport = async () => {
+    await exportToExcel({ supplierName, quantity, price, destination, productType, costs });
   };
 
   // ── Action: Schedule Call ─────────────────────────────────────────────────
   const handleScheduleCall = () => {
-    const adminPhone = "+50212345678";
-    window.location.href = `tel:${adminPhone}`;
+    window.location.href = `tel:${SEAL_COMPANY.phone.replace(/\s+/g, "")}`;
   };
 
   // ── Action: Submit Quote Request ──────────────────────────────────────────
@@ -484,7 +470,6 @@ export function FinalCTA() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              {/* Request Quote — opens modal */}
               <button
                 onClick={() => setShowQuoteModal(true)}
                 className="flex-1 py-4 bg-white text-[#0B3C5D] rounded-xl hover:bg-blue-50 transition-all font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl hover:scale-105"
@@ -492,7 +477,6 @@ export function FinalCTA() {
                 <Mail className="w-5 h-5" />
                 {t("final.requestQuote")}
               </button>
-              {/* Schedule Call — opens phone dialer */}
               <button
                 onClick={handleScheduleCall}
                 className="flex-1 py-4 bg-white/20 backdrop-blur-sm border-2 border-white text-white rounded-xl hover:bg-white/30 transition-all font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl hover:scale-105"

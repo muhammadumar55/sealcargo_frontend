@@ -8,7 +8,9 @@ interface LanguageContextType {
   t: (key: string) => string;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined,
+);
 
 const translations = {
   es: {
@@ -20,10 +22,12 @@ const translations = {
     "hero.badge": "Impulsado por la Experiencia Logística de SEAL",
     "hero.title": "Proveedores Clasificados. Costos Reales.",
     "hero.titleHighlight": "Menos Riesgo.",
-    "hero.subtitle": "Asistente de importación impulsado por IA que te ayuda a encontrar proveedores, analizar costos y gestionar el comercio internacional con confianza",
+    "hero.subtitle":
+      "Asistente de importación impulsado por IA que te ayuda a encontrar proveedores, analizar costos y gestionar el comercio internacional con confianza",
     "hero.placeholder": "Quiero importar sillas de madera desde China...",
     "hero.cta": "Comenzar Análisis Gratis",
-    "hero.noCreditCard": "No se requiere tarjeta de crédito • Obtén resultados en segundos",
+    "hero.noCreditCard":
+      "No se requiere tarjeta de crédito • Obtén resultados en segundos",
     "hero.formTitle": "Completa tu Perfil",
     "hero.nameLabel": "Nombre Completo",
     "hero.namePlaceholder": "Juan Pérez",
@@ -40,14 +44,19 @@ const translations = {
     "trust.network": "Red de Comercio Global",
 
     // Features Section
-    "features.title": "Todo lo que necesitas para importar de manera más inteligente",
-    "features.subtitle": "Información impulsada por IA respaldada por experiencia logística",
+    "features.title":
+      "Todo lo que necesitas para importar de manera más inteligente",
+    "features.subtitle":
+      "Información impulsada por IA respaldada por experiencia logística",
     "features.supplier.title": "Descubrimiento de Proveedores",
-    "features.supplier.desc": "Encuentra proveedores verificados en Alibaba con calificaciones de calidad y requisitos de MOQ",
+    "features.supplier.desc":
+      "Encuentra proveedores verificados en Alibaba con calificaciones de calidad y requisitos de MOQ",
     "features.cost.title": "Análisis de Costos",
-    "features.cost.desc": "Calcula costos totales desembarcados incluyendo aranceles, impuestos y envío",
+    "features.cost.desc":
+      "Calcula costos totales desembarcados incluyendo aranceles, impuestos y envío",
     "features.risk.title": "Evaluación de Riesgos",
-    "features.risk.desc": "Identifica problemas de cumplimiento y requisitos de documentación antes de ordenar",
+    "features.risk.desc":
+      "Identifica problemas de cumplimiento y requisitos de documentación antes de ordenar",
 
     // How It Works
     "howItWorks.title": "Cómo funciona",
@@ -59,7 +68,8 @@ const translations = {
     "howItWorks.step3.title": "Analiza",
     "howItWorks.step3.desc": "La IA encuentra proveedores y calcula costos",
     "howItWorks.step4.title": "Importa",
-    "howItWorks.step4.desc": "Obtén tu informe completo y deja la operación en manos de SEAL",
+    "howItWorks.step4.desc":
+      "Obtén tu informe completo y deja la operación en manos de SEAL",
 
     // Footer
     "footer.tagline": "Conectando Guatemala al Comercio Global",
@@ -73,12 +83,14 @@ const translations = {
     "chat.subtitle": "Experto en abastecimiento y aduanas impulsado por IA",
     "chat.placeholder": "Pregunta sobre proveedores, costos, cumplimiento...",
     "chat.ctaTitle": "¿Listo para encontrar proveedores?",
-    "chat.ctaDesc": "Completa la calificación del producto para obtener coincidencias precisas de proveedores y estimaciones de costos.",
+    "chat.ctaDesc":
+      "Completa la calificación del producto para obtener coincidencias precisas de proveedores y estimaciones de costos.",
     "chat.ctaButton": "Continuar a Calificación",
 
     // Product Qualification
     "qualification.title": "Calificación de Producto",
-    "qualification.subtitle": "Ayúdanos a encontrar los proveedores perfectos para tus necesidades",
+    "qualification.subtitle":
+      "Ayúdanos a encontrar los proveedores perfectos para tus necesidades",
     "qualification.back": "Volver al Chat",
     "qualification.step": "Paso",
     "qualification.of": "de",
@@ -138,11 +150,14 @@ const translations = {
     "suppliers.priceScore": "Puntuación de Precio",
     "suppliers.overallScore": "Puntuación General IA",
     "suppliers.bestValue": "Mejor Valor",
-    "suppliers.bestValueDesc": "ofrece la mejor relación calidad-precio según tu presupuesto y cantidad.",
+    "suppliers.bestValueDesc":
+      "ofrece la mejor relación calidad-precio según tu presupuesto y cantidad.",
     "suppliers.moqAnalysis": "Análisis MOQ",
-    "suppliers.moqAnalysisDesc": "proveedores pueden cumplir con tu requisito de cantidad sin exceder el presupuesto.",
+    "suppliers.moqAnalysisDesc":
+      "proveedores pueden cumplir con tu requisito de cantidad sin exceder el presupuesto.",
     "suppliers.priceAlert": "Alerta de Precio",
-    "suppliers.priceAlertDesc": "Los precios actuales son 8% más bajos que el promedio del Q1 2026. Buen momento para ordenar.",
+    "suppliers.priceAlertDesc":
+      "Los precios actuales son 8% más bajos que el promedio del Q1 2026. Buen momento para ordenar.",
     "suppliers.selectedSupplier": "Proveedor Seleccionado",
     "suppliers.baseCost": "Costo Base:",
     "suppliers.estShipping": "Envío Est.:",
@@ -153,7 +168,8 @@ const translations = {
     "suppliers.exportLeads": "Exportar Leads a CRM",
     "suppliers.generateLead": "Generar Lead",
     "suppliers.leadNotes": "Notas del Lead (Opcional)",
-    "suppliers.leadNotesPlaceholder": "Agrega notas sobre este lead para tu equipo...",
+    "suppliers.leadNotesPlaceholder":
+      "Agrega notas sobre este lead para tu equipo...",
     "suppliers.saveLead": "Guardar Lead y Enviar Consulta",
     "suppliers.cancel": "Cancelar",
     "suppliers.callManufacturer": "Llamar al Fabricante",
@@ -175,21 +191,42 @@ const translations = {
     "cost.insurance": "Seguro",
     "cost.savingsTitle": "Ahorros Identificados",
     "cost.saving1": "Consolidar envío ahorra $1,200 vs. múltiples contenedores",
-    "cost.saving2": "Proveedor seleccionado ofrece 5% descuento para pedidos superiores a 800 unidades",
-    "cost.saving3": "La tasa arancelaria actual es favorable para importaciones de muebles de madera",
+    "cost.saving2":
+      "Proveedor seleccionado ofrece 5% descuento para pedidos superiores a 800 unidades",
+    "cost.saving3":
+      "La tasa arancelaria actual es favorable para importaciones de muebles de madera",
     "cost.considerationsTitle": "Consideraciones Adicionales",
-    "cost.consideration1": "Términos de pago: 30% depósito, 70% antes del envío",
-    "cost.consideration2": "Tiempo de entrega: 15-20 días producción + 25 días envío",
-    "cost.consideration3": "Inspección de calidad recomendada antes del pago final",
+    "cost.consideration1":
+      "Términos de pago: 30% depósito, 70% antes del envío",
+    "cost.consideration2":
+      "Tiempo de entrega: 15-20 días producción + 25 días envío",
+    "cost.consideration3":
+      "Inspección de calidad recomendada antes del pago final",
+    "cost.backToSuppliers": "← Proveedores",
+    "cost.exportExcel": "Exportar Excel",
+    "cost.dynamicCalc": "Cálculo dinámico",
+    "cost.demoCalc":
+      "Estimados de demostración — selecciona un proveedor para cálculo real",
+    "cost.units": "unidades",
+    "cost.destination": "destino:",
+    "cost.perUnitLabel": "por unidad",
+    "cost.lower": "menor ✅",
+    "cost.higher": "mayor ⚠️",
+    "cost.unitPrice": "Precio por unidad",
+    "cost.is": "es",
+    "cost.than": "que el presupuesto por unidad de",
+    "cost.downloadFullReport": "Descargar Informe Completo (PDF)",
 
     // Risk & Compliance
     "risk.title": "Evaluación de Riesgos y Cumplimiento",
-    "risk.subtitle": "Análisis integral de riesgos potenciales y requisitos regulatorios",
+    "risk.subtitle":
+      "Análisis integral de riesgos potenciales y requisitos regulatorios",
     "risk.generateReport": "Generar Informe",
     "risk.report": "Informe",
     "risk.backToCosts": "← Costos",
     "risk.dynamicAnalysis": "Análisis dinámico para",
-    "risk.genericAnalysis": "Análisis genérico — selecciona un proveedor para datos precisos",
+    "risk.genericAnalysis":
+      "Análisis genérico — selecciona un proveedor para datos precisos",
     "risk.overallRiskScore": "Puntuación General de Riesgo",
     "risk.riskLevel": "Nivel de Riesgo",
     "risk.riskWord": "RIESGO",
@@ -211,16 +248,22 @@ const translations = {
     "risk.complianceChecks": "Verificaciones de Cumplimiento",
     "risk.checksPassed": "Verificaciones Aprobadas",
     "risk.regionalInsights": "Perspectivas Regionales",
-    "risk.insight1": "Relaciones comerciales China-EE.UU. estables para importaciones de muebles",
+    "risk.insight1":
+      "Relaciones comerciales China-EE.UU. estables para importaciones de muebles",
     "risk.insight2": "Proveedor ubicado en centro de fabricación establecido",
     "risk.insight3": "Bajo riesgo político para esta categoría de producto",
     "risk.overallAssessment": "Evaluación General",
-    "risk.assessmentText": "Esta importación tiene un perfil de riesgo general bajo. Aborda las advertencias de prioridad media antes de proceder y asegúrate de que toda la documentación requerida esté preparada.",
+    "risk.assessmentText":
+      "Esta importación tiene un perfil de riesgo general bajo. Aborda las advertencias de prioridad media antes de proceder y asegúrate de que toda la documentación requerida esté preparada.",
     "risk.assessmentLow1": "Esta importación tiene un perfil de riesgo",
-    "risk.assessmentLow2": "El proveedor cumple con la mayoría de los criterios.",
-    "risk.assessmentLow3": "Atender las verificaciones pendientes antes de proceder.",
-    "risk.assessmentMedium": "Esta importación tiene riesgo medio. Revisar todas las advertencias y completar las verificaciones de cumplimiento antes de proceder.",
-    "risk.assessmentHigh": "Esta importación tiene riesgo alto. Se recomienda revisar cuidadosamente todas las advertencias y considerar proveedores alternativos.",
+    "risk.assessmentLow2":
+      "El proveedor cumple con la mayoría de los criterios.",
+    "risk.assessmentLow3":
+      "Atender las verificaciones pendientes antes de proceder.",
+    "risk.assessmentMedium":
+      "Esta importación tiene riesgo medio. Revisar todas las advertencias y completar las verificaciones de cumplimiento antes de proceder.",
+    "risk.assessmentHigh":
+      "Esta importación tiene riesgo alto. Se recomienda revisar cuidadosamente todas las advertencias y considerar proveedores alternativos.",
     "risk.supplierAnalyzed": "Proveedor Analizado",
     "risk.aiScoreLabel": "Puntuación IA:",
     "risk.yearsInBusiness": "Años en negocio:",
@@ -246,7 +289,8 @@ const translations = {
     "final.downloadReport": "Descargar Informe Completo",
     "final.exportLeads": "Exportar Leads",
     "final.leadsExported": "¡Leads Exportados Exitosamente!",
-    "final.leadsExportedDesc": "leads de proveedores calificados han sido preparados para tu CRM",
+    "final.leadsExportedDesc":
+      "leads de proveedores calificados han sido preparados para tu CRM",
     "final.exportIncludes": "La Exportación Incluye:",
     "final.include1": "Información completa de contacto del proveedor",
     "final.include2": "Puntuaciones de calidad IA y clasificaciones",
@@ -257,7 +301,8 @@ const translations = {
     "final.emailLeads": "Enviar Leads al Equipo por Email",
     "final.close": "Cerrar",
     "final.sealTitle": "Deja que SEAL Maneje tu Importación",
-    "final.sealSubtitle": "¿Por qué gestionar la logística tú mismo? Deja que nuestros expertos manejen todo desde el abastecimiento hasta la entrega.",
+    "final.sealSubtitle":
+      "¿Por qué gestionar la logística tú mismo? Deja que nuestros expertos manejen todo desde el abastecimiento hasta la entrega.",
     "final.negotiation": "Negociación con Proveedores",
     "final.negotiationDesc": "Obtén mejores precios y términos",
     "final.qualityControl": "Control de Calidad",
@@ -271,9 +316,12 @@ const translations = {
     "final.emailReport": "Enviar Informe por Email",
     "final.nextSteps": "Próximos Pasos",
     "final.step1": "Revisar detalles del proveedor y contactar los 3 mejores",
-    "final.step2": "Solicitar muestras de productos para verificación de calidad",
-    "final.step3": "Preparar documentación requerida de la lista de cumplimiento",
-    "final.step4": "Considerar servicio completo de logística SEAL para importación sin complicaciones",
+    "final.step2":
+      "Solicitar muestras de productos para verificación de calidad",
+    "final.step3":
+      "Preparar documentación requerida de la lista de cumplimiento",
+    "final.step4":
+      "Considerar servicio completo de logística SEAL para importación sin complicaciones",
     "final.startNew": "Comenzar Nuevo Análisis",
     "final.basedOnReal": "Análisis basado en proveedor real:",
     "final.demoData": "Mostrando datos de ejemplo",
@@ -298,17 +346,21 @@ const translations = {
     "final.quoteMessage": "Mensaje adicional (opcional)",
     "final.quoteSubmit": "Enviar Solicitud",
     "final.quoteSending": "Enviando...",
-    "final.quoteSuccess": "¡Solicitud enviada con éxito! Nuestro equipo te contactará pronto.",
-    "final.quoteError": "⚠️ No se pudo enviar. Por favor intenta de nuevo o contáctanos directamente.",
+    "final.quoteSuccess":
+      "¡Solicitud enviada con éxito! Nuestro equipo te contactará pronto.",
+    "final.quoteError":
+      "⚠️ No se pudo enviar. Por favor intenta de nuevo o contáctanos directamente.",
     // Email Modal
     "final.emailModalTitle": "Enviar Informe por Email",
-    "final.emailModalDesc": "Te enviaremos el informe completo en PDF a tu correo.",
+    "final.emailModalDesc":
+      "Te enviaremos el informe completo en PDF a tu correo.",
     "final.emailYourName": "Tu nombre",
     "final.emailYourEmail": "tu@email.com *",
     "final.emailSubmit": "Enviar Informe",
     "final.emailSending": "Enviando...",
     "final.emailSuccess": "✅ ¡Informe enviado a tu correo!",
-    "final.emailError": "⚠️ No se pudo enviar el informe. Por favor intenta de nuevo.",
+    "final.emailError":
+      "⚠️ No se pudo enviar el informe. Por favor intenta de nuevo.",
   },
   en: {
     // Navigation
@@ -319,7 +371,8 @@ const translations = {
     "hero.badge": "Powered by SEAL Logistics Expertise",
     "hero.title": "Ranked Suppliers. Real Costs.",
     "hero.titleHighlight": "Less Risk.",
-    "hero.subtitle": "AI-powered import assistant that helps you find suppliers, analyze costs, and manage international trade with confidence",
+    "hero.subtitle":
+      "AI-powered import assistant that helps you find suppliers, analyze costs, and manage international trade with confidence",
     "hero.placeholder": "I want to import wooden chairs from China...",
     "hero.cta": "Start Free Analysis",
     "hero.noCreditCard": "No credit card required • Get results in seconds",
@@ -342,11 +395,14 @@ const translations = {
     "features.title": "Everything you need to import smarter",
     "features.subtitle": "AI-powered insights backed by logistics expertise",
     "features.supplier.title": "Supplier Discovery",
-    "features.supplier.desc": "Find verified suppliers on Alibaba with quality ratings and MOQ requirements",
+    "features.supplier.desc":
+      "Find verified suppliers on Alibaba with quality ratings and MOQ requirements",
     "features.cost.title": "Cost Analysis",
-    "features.cost.desc": "Calculate total landed costs including duties, taxes, and shipping",
+    "features.cost.desc":
+      "Calculate total landed costs including duties, taxes, and shipping",
     "features.risk.title": "Risk Assessment",
-    "features.risk.desc": "Identify compliance issues and documentation requirements before you order",
+    "features.risk.desc":
+      "Identify compliance issues and documentation requirements before you order",
 
     // How It Works
     "howItWorks.title": "How it works",
@@ -372,12 +428,14 @@ const translations = {
     "chat.subtitle": "AI-powered sourcing and customs expert",
     "chat.placeholder": "Ask about suppliers, costs, compliance...",
     "chat.ctaTitle": "Ready to find suppliers?",
-    "chat.ctaDesc": "Complete the product qualification to get accurate supplier matches and cost estimates.",
+    "chat.ctaDesc":
+      "Complete the product qualification to get accurate supplier matches and cost estimates.",
     "chat.ctaButton": "Continue to Qualification",
 
     // Product Qualification
     "qualification.title": "Product Qualification",
-    "qualification.subtitle": "Help us find the perfect suppliers for your needs",
+    "qualification.subtitle":
+      "Help us find the perfect suppliers for your needs",
     "qualification.back": "Back to Chat",
     "qualification.step": "Step",
     "qualification.of": "of",
@@ -437,11 +495,14 @@ const translations = {
     "suppliers.priceScore": "Price Score",
     "suppliers.overallScore": "Overall AI Score",
     "suppliers.bestValue": "Best Value",
-    "suppliers.bestValueDesc": "offers the best price-to-quality ratio based on your budget and quantity.",
+    "suppliers.bestValueDesc":
+      "offers the best price-to-quality ratio based on your budget and quantity.",
     "suppliers.moqAnalysis": "MOQ Analysis",
-    "suppliers.moqAnalysisDesc": "suppliers can meet your quantity requirement without exceeding budget.",
+    "suppliers.moqAnalysisDesc":
+      "suppliers can meet your quantity requirement without exceeding budget.",
     "suppliers.priceAlert": "Price Alert",
-    "suppliers.priceAlertDesc": "Current prices are 8% lower than Q1 2026 average. Good time to order.",
+    "suppliers.priceAlertDesc":
+      "Current prices are 8% lower than Q1 2026 average. Good time to order.",
     "suppliers.selectedSupplier": "Selected Supplier",
     "suppliers.baseCost": "Base Cost:",
     "suppliers.estShipping": "Est. Shipping:",
@@ -452,7 +513,8 @@ const translations = {
     "suppliers.exportLeads": "Export Leads to CRM",
     "suppliers.generateLead": "Generate Lead",
     "suppliers.leadNotes": "Lead Notes (Optional)",
-    "suppliers.leadNotesPlaceholder": "Add notes about this lead for your team...",
+    "suppliers.leadNotesPlaceholder":
+      "Add notes about this lead for your team...",
     "suppliers.saveLead": "Save Lead & Send Inquiry",
     "suppliers.cancel": "Cancel",
     "suppliers.callManufacturer": "Call Manufacturer",
@@ -473,22 +535,42 @@ const translations = {
     "cost.vatTaxes": "VAT & Taxes",
     "cost.insurance": "Insurance",
     "cost.savingsTitle": "Cost Savings Identified",
-    "cost.saving1": "Consolidating shipment saves $1,200 vs. multiple containers",
-    "cost.saving2": "Selected supplier offers 5% discount for orders over 800 units",
-    "cost.saving3": "Current duty rate is favorable for wooden furniture imports",
+    "cost.saving1":
+      "Consolidating shipment saves $1,200 vs. multiple containers",
+    "cost.saving2":
+      "Selected supplier offers 5% discount for orders over 800 units",
+    "cost.saving3":
+      "Current duty rate is favorable for wooden furniture imports",
     "cost.considerationsTitle": "Additional Considerations",
     "cost.consideration1": "Payment terms: 30% deposit, 70% before shipment",
-    "cost.consideration2": "Lead time: 15-20 days production + 25 days shipping",
-    "cost.consideration3": "Quality inspection recommended before final payment",
+    "cost.consideration2":
+      "Lead time: 15-20 days production + 25 days shipping",
+    "cost.consideration3":
+      "Quality inspection recommended before final payment",
+    "cost.backToSuppliers": "← Suppliers",
+    "cost.exportExcel": "Export Excel",
+    "cost.dynamicCalc": "Dynamic calculation",
+    "cost.demoCalc": "Demo estimates — select a supplier for real calculation",
+    "cost.units": "units",
+    "cost.destination": "destination:",
+    "cost.perUnitLabel": "per unit",
+    "cost.lower": "lower ✅",
+    "cost.higher": "higher ⚠️",
+    "cost.unitPrice": "Price per unit",
+    "cost.is": "is",
+    "cost.than": "than the budget per unit of",
+    "cost.downloadFullReport": "Download Full Report (PDF)",
 
     // Risk & Compliance
     "risk.title": "Risk & Compliance Assessment",
-    "risk.subtitle": "Comprehensive analysis of potential risks and regulatory requirements",
+    "risk.subtitle":
+      "Comprehensive analysis of potential risks and regulatory requirements",
     "risk.generateReport": "Generate Report",
     "risk.report": "Report",
     "risk.backToCosts": "← Costs",
     "risk.dynamicAnalysis": "Dynamic analysis for",
-    "risk.genericAnalysis": "Generic analysis — select a supplier for accurate data",
+    "risk.genericAnalysis":
+      "Generic analysis — select a supplier for accurate data",
     "risk.overallRiskScore": "Overall Risk Score",
     "risk.riskLevel": "Risk Level",
     "risk.riskWord": "RISK",
@@ -514,12 +596,15 @@ const translations = {
     "risk.insight2": "Supplier located in established manufacturing hub",
     "risk.insight3": "Low political risk for this product category",
     "risk.overallAssessment": "Overall Assessment",
-    "risk.assessmentText": "This import has a low overall risk profile. Address the medium-priority warnings before proceeding, and ensure all required documentation is prepared.",
+    "risk.assessmentText":
+      "This import has a low overall risk profile. Address the medium-priority warnings before proceeding, and ensure all required documentation is prepared.",
     "risk.assessmentLow1": "This import has a risk profile of",
     "risk.assessmentLow2": "The supplier meets most criteria.",
     "risk.assessmentLow3": "Address pending checks before proceeding.",
-    "risk.assessmentMedium": "This import has medium risk. Review all warnings and complete compliance checks before proceeding.",
-    "risk.assessmentHigh": "This import has high risk. We recommend carefully reviewing all warnings and considering alternative suppliers.",
+    "risk.assessmentMedium":
+      "This import has medium risk. Review all warnings and complete compliance checks before proceeding.",
+    "risk.assessmentHigh":
+      "This import has high risk. We recommend carefully reviewing all warnings and considering alternative suppliers.",
     "risk.supplierAnalyzed": "Analyzed Supplier",
     "risk.aiScoreLabel": "AI Score:",
     "risk.yearsInBusiness": "Years in business:",
@@ -545,7 +630,8 @@ const translations = {
     "final.downloadReport": "Download Full Report",
     "final.exportLeads": "Export Leads",
     "final.leadsExported": "Leads Exported Successfully!",
-    "final.leadsExportedDesc": "qualified supplier leads have been prepared for your CRM",
+    "final.leadsExportedDesc":
+      "qualified supplier leads have been prepared for your CRM",
     "final.exportIncludes": "Export Includes:",
     "final.include1": "Complete supplier contact information",
     "final.include2": "AI quality scores and rankings",
@@ -556,7 +642,8 @@ const translations = {
     "final.emailLeads": "Email Leads to Team",
     "final.close": "Close",
     "final.sealTitle": "Let SEAL Handle Your Import",
-    "final.sealSubtitle": "Why manage logistics yourself? Let our experts handle everything from sourcing to delivery.",
+    "final.sealSubtitle":
+      "Why manage logistics yourself? Let our experts handle everything from sourcing to delivery.",
     "final.negotiation": "Supplier Negotiation",
     "final.negotiationDesc": "Get better prices and terms",
     "final.qualityControl": "Quality Control",
@@ -572,7 +659,8 @@ const translations = {
     "final.step1": "Review supplier details and contact top 3 matches",
     "final.step2": "Request product samples for quality verification",
     "final.step3": "Prepare required documentation from compliance list",
-    "final.step4": "Consider SEAL full-service logistics for hassle-free import",
+    "final.step4":
+      "Consider SEAL full-service logistics for hassle-free import",
     "final.startNew": "Start New Analysis",
     "final.basedOnReal": "Analysis based on real supplier:",
     "final.demoData": "Showing demo data",
@@ -597,18 +685,21 @@ const translations = {
     "final.quoteMessage": "Additional message (optional)",
     "final.quoteSubmit": "Send Request",
     "final.quoteSending": "Sending...",
-    "final.quoteSuccess": "Request sent successfully! Our team will contact you soon.",
-    "final.quoteError": "⚠️ Could not send. Please try again or contact us directly.",
+    "final.quoteSuccess":
+      "Request sent successfully! Our team will contact you soon.",
+    "final.quoteError":
+      "⚠️ Could not send. Please try again or contact us directly.",
     // Email Modal
     "final.emailModalTitle": "Email Report",
-    "final.emailModalDesc": "We will send you the full PDF report to your email.",
+    "final.emailModalDesc":
+      "We will send you the full PDF report to your email.",
     "final.emailYourName": "Your name",
     "final.emailYourEmail": "your@email.com *",
     "final.emailSubmit": "Send Report",
     "final.emailSending": "Sending...",
     "final.emailSuccess": "✅ Report sent to your email!",
     "final.emailError": "⚠️ Could not send the report. Please try again.",
-  }
+  },
 };
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
