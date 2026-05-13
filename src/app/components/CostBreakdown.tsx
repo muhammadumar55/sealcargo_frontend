@@ -286,6 +286,7 @@ export function CostBreakdown() {
       amount: costs.productCost,
       details: `${quantity.toLocaleString()} ${t("cost.units")} × $${Number(price).toFixed(2)} ${t("cost.perUnitLabel")}`,
       color: "blue",
+      displayPercent: `${((costs.productCost / costs.totalCost) * 100).toFixed(1)}%`,
     },
     {
       icon: Ship,
@@ -293,6 +294,7 @@ export function CostBreakdown() {
       amount: costs.shipping,
       details: `Envío estimado a ${destination} • ~25 días de tránsito`,
       color: "cyan",
+      displayPercent: `${((costs.shipping / costs.totalCost) * 100).toFixed(1)}%`,
     },
     {
       icon: FileText,
@@ -300,6 +302,7 @@ export function CostBreakdown() {
       amount: costs.importDuties,
       details: `Tasa arancelaria ${(costs.dutyRate * 100).toFixed(0)}% para ${productType}`,
       color: "purple",
+      displayPercent: `${(costs.dutyRate * 100).toFixed(0)}%`, // ✅ shows duty rate (e.g., 6%)
     },
     {
       icon: TrendingUp,
@@ -307,6 +310,7 @@ export function CostBreakdown() {
       amount: costs.taxes,
       details: `IVA ${(VAT_RATE * 100).toFixed(0)}% sobre producto + aranceles`,
       color: "green",
+      displayPercent: "12%", // ✅ FIXED at 12% — what the CEO wants
     },
     {
       icon: AlertCircle,
@@ -314,6 +318,7 @@ export function CostBreakdown() {
       amount: costs.insurance,
       details: `Seguro de carga • Cobertura completa • ${(INSURANCE_RATE * 100).toFixed(0)}% del valor`,
       color: "orange",
+      displayPercent: "1%", // ✅ FIXED at 1% — what the CEO wants
     },
   ];
 
@@ -537,7 +542,7 @@ export function CostBreakdown() {
                   ${item.amount.toLocaleString()}
                 </div>
                 <div className="text-xs sm:text-sm text-slate-600">
-                  {((item.amount / costs.totalCost) * 100).toFixed(1)}%
+                  {item.displayPercent}
                 </div>
               </div>
             </div>
