@@ -85,25 +85,26 @@ export interface ExcelExportData {
 
 export async function generateBeautifulExcel(data: ExcelExportData): Promise<void> {
   const wb = new ExcelJS.Workbook();
-  wb.creator       = SEAL_COMPANY.name;
+  wb.creator        = SEAL_COMPANY.name;
   wb.lastModifiedBy = SEAL_COMPANY.name;
-  wb.created       = new Date();
+  wb.created        = new Date();
 
   const ws = wb.addWorksheet("Análisis de Costos", {
     properties: { defaultColWidth: 18 },
     pageSetup:  { paperSize: 9, orientation: "portrait" },
   });
 
-  // ─── Column widths ───
+  // ─── Column widths (now 5 columns: Concepto | Detalle | Tasa | Monto | %) ───
   ws.columns = [
-    { width: 30 },
-    { width: 40 },
-    { width: 18 },
-    { width: 14 },
+    { width: 28 },   // A: Concepto
+    { width: 38 },   // B: Detalle
+    { width: 14 },   // C: Tasa Aplicada (NEW)
+    { width: 16 },   // D: Monto (USD)
+    { width: 12 },   // E: % del Total
   ];
 
-  // ═══ COMPANY HEADER (rows 1-4) ═══════════════════════════════════════════
-  ws.mergeCells("A1:D1");
+  // ═══ COMPANY HEADER (rows 1-3) ═══════════════════════════════════════════
+  ws.mergeCells("A1:E1");
   const titleCell = ws.getCell("A1");
   titleCell.value = SEAL_COMPANY.name;
   titleCell.font  = { name: "Arial", size: 16, bold: true, color: { argb: "FFFFFFFF" } };
@@ -114,7 +115,7 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
   };
   ws.getRow(1).height = 28;
 
-  ws.mergeCells("A2:D2");
+  ws.mergeCells("A2:E2");
   const addrCell = ws.getCell("A2");
   addrCell.value = SEAL_COMPANY.address;
   addrCell.font  = { name: "Arial", size: 10, color: { argb: "FFBFDBFE" } };
@@ -125,7 +126,7 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
   };
   ws.getRow(2).height = 18;
 
-  ws.mergeCells("A3:D3");
+  ws.mergeCells("A3:E3");
   const phoneCell = ws.getCell("A3");
   phoneCell.value = `Tel: ${SEAL_COMPANY.phone}  |  ${SEAL_COMPANY.website}`;
   phoneCell.font  = { name: "Arial", size: 10, color: { argb: "FFBFDBFE" } };
@@ -136,8 +137,8 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
   };
   ws.getRow(3).height = 16;
 
-  // ═══ REPORT TITLE (row 5) ═══════════════════════════════════════════════
-  ws.mergeCells("A5:D5");
+  // ═══ REPORT TITLE (rows 5-6) ═══════════════════════════════════════════════
+  ws.mergeCells("A5:E5");
   const reportTitleCell = ws.getCell("A5");
   reportTitleCell.value = data.reportTitle.toUpperCase();
   reportTitleCell.font  = { name: "Arial", size: 14, bold: true, color: { argb: "FF0B3C5D" } };
@@ -148,7 +149,7 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
   };
   ws.getRow(5).height = 26;
 
-  ws.mergeCells("A6:D6");
+  ws.mergeCells("A6:E6");
   const dateCell = ws.getCell("A6");
   dateCell.value = `Generado: ${new Date().toLocaleDateString("es-ES", {
     year: "numeric", month: "long", day: "numeric",
@@ -161,7 +162,7 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
   ws.getRow(7).height = 8;
 
   // ═══ ORDER DETAILS (rows 8-13) ═══════════════════════════════════════════
-  ws.mergeCells("A8:D8");
+  ws.mergeCells("A8:E8");
   const detailsHeader = ws.getCell("A8");
   detailsHeader.value = "DETALLES DEL PEDIDO";
   detailsHeader.font  = { name: "Arial", size: 11, bold: true, color: { argb: "FFFFFFFF" } };
@@ -183,7 +184,7 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
   orderRows.forEach((row, i) => {
     const rowNum = 9 + i;
     ws.mergeCells(`A${rowNum}:B${rowNum}`);
-    ws.mergeCells(`C${rowNum}:D${rowNum}`);
+    ws.mergeCells(`C${rowNum}:E${rowNum}`);
     const labelCell = ws.getCell(`A${rowNum}`);
     const valueCell = ws.getCell(`C${rowNum}`);
 
@@ -216,8 +217,8 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
   ws.getRow(14).height = 12;
 
   // ═══ COST BREAKDOWN TABLE ═══════════════════════════════════════════════
-  // Header row 15
-  const headers = ["CONCEPTO", "DETALLE", "MONTO (USD)", "% DEL TOTAL"];
+  // Header row 15 — NOW 5 COLUMNS
+  const headers = ["CONCEPTO", "DETALLE", "TASA APLICADA", "MONTO (USD)", "% DEL TOTAL"];
   headers.forEach((header, i) => {
     const cell = ws.getRow(15).getCell(i + 1);
     cell.value = header;
@@ -236,32 +237,42 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
   });
   ws.getRow(15).height = 26;
 
-  // Data rows 16-20
+  // Data rows 16-20 — Each item has appliedRate (the actual % the client wants)
   const dataRows = [
     {
       concept: "Costo de Producto",
       detail:  `${data.quantity.toLocaleString()} unidades × $${Number(data.price).toFixed(2)}`,
+      appliedRate: "—",
       amount:  data.costs.productCost,
+      isRate:  false,
     },
     {
       concept: "Flete Marítimo",
       detail:  `Envío a ${data.destination} (~25 días tránsito)`,
+      appliedRate: "—",
       amount:  data.costs.shipping,
+      isRate:  false,
     },
     {
       concept: "Aranceles de Importación",
-      detail:  `Tasa ${(data.costs.dutyRate * 100).toFixed(0)}% para ${data.productType}`,
+      detail:  `Tasa para ${data.productType}`,
+      appliedRate: `${(data.costs.dutyRate * 100).toFixed(0)}%`,
       amount:  data.costs.importDuties,
+      isRate:  true,
     },
     {
       concept: "IVA & Impuestos",
-      detail:  `IVA ${(data.vatRate * 100).toFixed(0)}% sobre producto + aranceles`,
+      detail:  "Sobre producto + aranceles",
+      appliedRate: `${(data.vatRate * 100).toFixed(0)}%`,        // ✅ 12%
       amount:  data.costs.taxes,
+      isRate:  true,
     },
     {
       concept: "Seguro de Carga",
-      detail:  `Cobertura completa (${(data.insuranceRate * 100).toFixed(0)}% del valor)`,
+      detail:  "Cobertura completa del valor",
+      appliedRate: `${(data.insuranceRate * 100).toFixed(0)}%`,  // ✅ 1%
       amount:  data.costs.insurance,
+      isRate:  true,
     },
   ];
 
@@ -270,10 +281,11 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
     const isAlt  = i % 2 === 1;
     const fillColor = isAlt ? "FFEFF6FF" : "FFFFFFFF";
 
-    const conceptCell = ws.getRow(rowNum).getCell(1);
-    const detailCell  = ws.getRow(rowNum).getCell(2);
-    const amountCell  = ws.getRow(rowNum).getCell(3);
-    const percentCell = ws.getRow(rowNum).getCell(4);
+    const conceptCell    = ws.getRow(rowNum).getCell(1);
+    const detailCell     = ws.getRow(rowNum).getCell(2);
+    const appliedRateCell = ws.getRow(rowNum).getCell(3); // NEW
+    const amountCell     = ws.getRow(rowNum).getCell(4);
+    const percentCell    = ws.getRow(rowNum).getCell(5);
 
     conceptCell.value = row.concept;
     conceptCell.font  = { name: "Arial", size: 10, bold: true, color: { argb: "FF0B3C5D" } };
@@ -282,6 +294,16 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
     detailCell.value = row.detail;
     detailCell.font  = { name: "Arial", size: 9, color: { argb: "FF475569" } };
     detailCell.alignment = { vertical: "middle", horizontal: "left", indent: 1 };
+
+    // ✅ APPLIED RATE column — shows 12%, 1%, 6%, etc. (highlighted yellow)
+    appliedRateCell.value = row.appliedRate;
+    appliedRateCell.font = {
+      name: "Arial",
+      size: 11,
+      bold: row.isRate,
+      color: { argb: row.isRate ? "FF0B3C5D" : "FF94A3B8" },
+    };
+    appliedRateCell.alignment = { vertical: "middle", horizontal: "center" };
 
     amountCell.value     = row.amount;
     amountCell.numFmt    = '"$"#,##0';
@@ -294,6 +316,7 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
     percentCell.font      = { name: "Arial", size: 10, color: { argb: "FF64748B" } };
     percentCell.alignment = { vertical: "middle", horizontal: "center" };
 
+    // Apply fill — special yellow highlight on Tasa Aplicada column for rate rows
     [conceptCell, detailCell, amountCell, percentCell].forEach(cell => {
       cell.fill = {
         type: "pattern", pattern: "solid",
@@ -307,23 +330,37 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
       };
     });
 
+    // ✅ HIGHLIGHTED YELLOW for the Tasa Aplicada column (matches client's screenshot)
+    appliedRateCell.fill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: row.isRate ? "FFFEF3C7" : fillColor },  // yellow-100 only for rate rows
+    };
+    appliedRateCell.border = {
+      top:    { style: "thin", color: { argb: "FFCBD5E1" } },
+      bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+      left:   { style: "thin", color: { argb: "FFCBD5E1" } },
+      right:  { style: "thin", color: { argb: "FFCBD5E1" } },
+    };
+
     ws.getRow(rowNum).height = 22;
   });
 
   // ═══ TOTAL ROW (row 21) ═══════════════════════════════════════════════════
   const totalRowNum = 21;
-  const totalConceptCell = ws.getRow(totalRowNum).getCell(1);
-  const totalDetailCell  = ws.getRow(totalRowNum).getCell(2);
-  const totalAmountCell  = ws.getRow(totalRowNum).getCell(3);
-  const totalPctCell     = ws.getRow(totalRowNum).getCell(4);
+  const totalConceptCell  = ws.getRow(totalRowNum).getCell(1);
+  const totalDetailCell   = ws.getRow(totalRowNum).getCell(2);
+  const totalRateCell     = ws.getRow(totalRowNum).getCell(3);
+  const totalAmountCell   = ws.getRow(totalRowNum).getCell(4);
+  const totalPctCell      = ws.getRow(totalRowNum).getCell(5);
 
   totalConceptCell.value = "COSTO TOTAL LANDED";
   totalDetailCell.value  = `${data.quantity.toLocaleString()} unidades`;
+  totalRateCell.value    = "—";
   totalAmountCell.value  = data.costs.totalCost;
   totalAmountCell.numFmt = '"$"#,##0';
   totalPctCell.value     = "100%";
 
-  [totalConceptCell, totalDetailCell, totalAmountCell, totalPctCell].forEach((cell, i) => {
+  [totalConceptCell, totalDetailCell, totalRateCell, totalAmountCell, totalPctCell].forEach((cell, i) => {
     cell.font = { name: "Arial", size: 12, bold: true, color: { argb: "FFFFFFFF" } };
     cell.fill = {
       type: "pattern", pattern: "solid",
@@ -331,8 +368,8 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
     };
     cell.alignment = {
       vertical: "middle",
-      horizontal: i === 2 ? "right" : (i === 3 ? "center" : "left"),
-      indent: i === 2 ? 1 : (i === 3 ? 0 : 1),
+      horizontal: i === 3 ? "right" : (i === 2 || i === 4 ? "center" : "left"),
+      indent: i === 3 ? 1 : (i === 2 || i === 4 ? 0 : 1),
     };
     cell.border = {
       top:    { style: "medium", color: { argb: "FF000000" } },
@@ -345,13 +382,13 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
 
   // ═══ PER UNIT ROW (row 22) ════════════════════════════════════════════════
   const perUnitRowNum = 22;
-  ws.mergeCells(`A${perUnitRowNum}:B${perUnitRowNum}`);
-  const perUnitLabel = ws.getCell(`A${perUnitRowNum}`);
-  const perUnitValue = ws.getCell(`C${perUnitRowNum}`);
-  const perUnitEmpty = ws.getCell(`D${perUnitRowNum}`);
+  ws.mergeCells(`A${perUnitRowNum}:C${perUnitRowNum}`);
+  const perUnitLabel  = ws.getCell(`A${perUnitRowNum}`);
+  const perUnitValue  = ws.getCell(`D${perUnitRowNum}`);
+  const perUnitEmpty  = ws.getCell(`E${perUnitRowNum}`);
 
-  perUnitLabel.value = "COSTO POR UNIDAD";
-  perUnitValue.value = data.costs.perUnit;
+  perUnitLabel.value  = "COSTO POR UNIDAD";
+  perUnitValue.value  = data.costs.perUnit;
   perUnitValue.numFmt = '"$"#,##0.00';
 
   [perUnitLabel, perUnitValue, perUnitEmpty].forEach((cell, i) => {
@@ -375,14 +412,14 @@ export async function generateBeautifulExcel(data: ExcelExportData): Promise<voi
   ws.getRow(perUnitRowNum).height = 24;
 
   // ═══ FOOTER (rows 24-25) ══════════════════════════════════════════════════
-  ws.mergeCells("A24:D24");
+  ws.mergeCells("A24:E24");
   const footerCell = ws.getCell("A24");
   footerCell.value = "Este análisis es una estimación. Los costos reales pueden variar.";
   footerCell.font  = { name: "Arial", size: 9, italic: true, color: { argb: "FF64748B" } };
   footerCell.alignment = { vertical: "middle", horizontal: "center" };
   ws.getRow(24).height = 18;
 
-  ws.mergeCells("A25:D25");
+  ws.mergeCells("A25:E25");
   const footerCell2 = ws.getCell("A25");
   footerCell2.value = `${SEAL_COMPANY.name}  •  ${SEAL_COMPANY.phone}`;
   footerCell2.font  = { name: "Arial", size: 9, bold: true, color: { argb: "FF0B3C5D" } };
