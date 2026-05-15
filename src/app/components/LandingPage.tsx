@@ -42,9 +42,11 @@ export function LandingPage() {
     <div className="min-h-screen scroll-smooth">
       {/* Navigation */}
       <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+        {/* Decreased padding from py-3 to py-1.5 to make the header thinner */}
+        <div className="max-w-7xl mx-auto px-6 py-1.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="SEAL" className="h-12 sm:h-16 md:h-[85px]" />
+            {/* Reduced md:h-[85px] to md:h-[65px] so the logo doesn't stretch the navbar height */}
+            <img src={logo} alt="SEAL" className="h-12 sm:h-14 md:h-[65px]" />
           </div>
           <div className="flex items-center gap-3 sm:gap-6">
             <a

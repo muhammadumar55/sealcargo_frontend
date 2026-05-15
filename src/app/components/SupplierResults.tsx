@@ -439,24 +439,29 @@ export function SupplierResults() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+        {/* Decreased py-3 to py-1.5 and sm:py-4 to sm:py-2 to make the bar thinner */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-1.5 sm:py-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Reduced desktop height from md:h-[85px] to md:h-[65px] and sm:h-16 to sm:h-14 so the logo doesn't stretch the navbar */}
             <img
               src={logo}
               alt="SEAL"
-              className="h-12 sm:h-16 md:h-[85px] flex-shrink-0"
+              className="h-12 sm:h-14 md:h-[65px] flex-shrink-0"
             />
             <span className="text-sm sm:text-xl font-bold text-[#0B3C5D] hidden xs:block truncate">
-              SmartTrade AI
+              {" "}
+              SmartTrade AI{" "}
             </span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Reduced button padding from py-2 to py-1.5 and sm:py-3 to sm:py-2 to fit perfectly in the shorter header */}
             <button
               onClick={goToCosts}
-              className="px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center gap-2 shadow-lg hover:shadow-xl text-xs sm:text-sm whitespace-nowrap"
+              className="px-3 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center gap-2 shadow-lg hover:shadow-xl text-xs sm:text-sm whitespace-nowrap"
             >
               <span className="hidden sm:inline">
-                {t("suppliers.viewCostBreakdown")}
+                {" "}
+                {t("suppliers.viewCostBreakdown")}{" "}
               </span>
               <span className="sm:hidden">Costos</span>
               <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />

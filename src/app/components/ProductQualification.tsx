@@ -81,11 +81,14 @@ export function ProductQualification() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50">
       {/* Header */}
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+        {/* Decreased padding from py-3 to py-1.5 to shrink the header height */}
+        <div className="max-w-7xl mx-auto px-6 py-1.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="SEAL" className="h-[85px]" />
+            {/* Reduced the logo height from h-[85px] to h-[60px] to make the header thinner */}
+            <img src={logo} alt="SEAL" className="h-[60px]" />
             <span className="text-xl font-bold text-[#0B3C5D]">
-              SmartTrade AI
+              {" "}
+              SmartTrade AI{" "}
             </span>
           </div>
           <div className="flex items-center gap-4">
@@ -95,7 +98,8 @@ export function ProductQualification() {
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">
-                {t("qualification.back")}
+                {" "}
+                {t("qualification.back")}{" "}
               </span>
             </button>
             <LanguageToggle />

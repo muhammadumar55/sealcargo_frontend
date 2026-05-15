@@ -56,43 +56,59 @@ export function ChatInterface() {
     <div className="h-screen flex bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Sidebar */}
       {/* Mobile menu button */}
-<button
-  onClick={() => setSidebarOpen(!sidebarOpen)}
-  className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-slate-200"
->
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-  </svg>
-</button>
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border border-slate-200"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-6 h-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
 
-{/* Sidebar overlay (mobile) */}
-{sidebarOpen && (
-  <div
-    onClick={() => setSidebarOpen(false)}
-    className="lg:hidden fixed inset-0 bg-black/50 z-30"
-  />
-)}
+      {/* Sidebar overlay (mobile) */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+        />
+      )}
 
-{/* Sidebar */}
-<div className={`
+      {/* Sidebar */}
+      <div
+        className={`
   fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white/95 backdrop-blur-lg border-r border-slate-200 flex flex-col shadow-xl
   transform transition-transform duration-300 ease-in-out
-  ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-`}>
-  {/* ...keep existing sidebar content... */}
-</div>
+  ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+`}
+      >
+        {/* ...keep existing sidebar content... */}
+      </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-lg border-b border-slate-200 px-6 py-5 shadow-sm">
+        {/* Decreased vertical padding from py-5 to py-3 to shrink the header height */}
+        <div className="bg-white/80 backdrop-blur-lg border-b border-slate-200 px-6 py-3 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-[#0B3C5D]">
-                {t("chat.title")}
+                {" "}
+                {t("chat.title")}{" "}
               </h2>
               <p className="text-sm text-slate-600 mt-1">
-                {t("chat.subtitle")}
+                {" "}
+                {t("chat.subtitle")}{" "}
               </p>
             </div>
             <LanguageToggle />

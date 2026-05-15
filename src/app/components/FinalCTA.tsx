@@ -447,15 +447,18 @@ export function FinalCTA() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-blue-50">
       {/* Header */}
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+        {/* Decreased py-3 to py-1.5 and sm:py-4 to sm:py-2 to shrink the header height */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-1.5 sm:py-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Reduced desktop height from md:h-[85px] to md:h-[65px] and sm:h-16 to sm:h-14 so the logo doesn't stretch the navbar */}
             <img
               src={logo}
               alt="SEAL"
-              className="h-12 sm:h-16 md:h-[85px] flex-shrink-0"
+              className="h-12 sm:h-14 md:h-[65px] flex-shrink-0"
             />
             <span className="text-sm sm:text-xl font-bold text-[#0B3C5D] hidden xs:block truncate">
-              SmartTrade AI
+              {" "}
+              SmartTrade AI{" "}
             </span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
