@@ -17,6 +17,7 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 import logo from "../../imports/ChatGPT_Image_Apr_27,_2026,_10_59_16_AM.png";
 import { useLanguage } from "../context/LanguageContext";
@@ -765,7 +766,7 @@ export function SupplierResults() {
                   </div>
 
                   {/* Footer Actions */}
-                  <div className="border-t border-slate-200 p-4 bg-slate-50 rounded-b-xl flex gap-2">
+                  <div className="border-t border-slate-200 p-4 bg-slate-50 rounded-b-xl flex items-center gap-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -785,18 +786,22 @@ export function SupplierResults() {
                         }`}
                       />
                     </button>
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-xs font-medium text-slate-500">
-                        {t("suppliers.callManufacturer")}
-                      </span>
-                      <a
-                        href={`tel:${supplier.contactPhone || "+1234567890"}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="px-4 py-2 rounded-lg border-2 border-slate-300 text-slate-600 hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
-                      >
-                        <Phone className="w-5 h-5" />
-                      </a>
-                    </div>
+
+                    {/* ✅ View on Alibaba — opens product page in new tab */}
+                    <a
+                      href={
+                        supplier.productUrl ||
+                        supplier.storeUrl ||
+                        "https://www.alibaba.com"
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-1 px-4 py-2.5 rounded-lg border-2 border-orange-400 bg-gradient-to-r from-orange-50 to-amber-50 text-orange-700 hover:from-orange-100 hover:to-amber-100 hover:border-orange-500 transition-all flex items-center justify-center gap-2 font-semibold text-sm shadow-sm hover:shadow-md"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>{t("suppliers.viewOnAlibaba")}</span>
+                    </a>
                   </div>
                 </div>
               );

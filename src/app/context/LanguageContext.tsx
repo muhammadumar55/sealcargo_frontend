@@ -173,6 +173,8 @@ const translations = {
     "suppliers.saveLead": "Guardar Lead y Enviar Consulta",
     "suppliers.cancel": "Cancelar",
     "suppliers.callManufacturer": "Llamar al Fabricante",
+    "suppliers.viewOnAlibaba": "Ver en Alibaba",
+    "suppliers.viewProduct": "Ver Producto",
 
     // Cost Breakdown
     "cost.title": "Análisis de Costo Total Desembarcado",
@@ -518,6 +520,8 @@ const translations = {
     "suppliers.saveLead": "Save Lead & Send Inquiry",
     "suppliers.cancel": "Cancel",
     "suppliers.callManufacturer": "Call Manufacturer",
+    "suppliers.viewOnAlibaba": "View on Alibaba",
+    "suppliers.viewProduct": "View Product",
 
     // Cost Breakdown
     "cost.title": "Total Landed Cost Analysis",
