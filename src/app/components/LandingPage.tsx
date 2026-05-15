@@ -17,10 +17,8 @@ export function LandingPage() {
   const handleStartAnalysis = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !query) return;
-
     setSubmitting(true);
 
-    // ── Send lead to admin (fire-and-forget — don't block user) ──
     try {
       await fetch(
         `${import.meta.env.VITE_API_URL || "http://localhost:3001"}/api/email/lead`,
@@ -40,7 +38,8 @@ export function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen">
+    // Added 'scroll-smooth' here so that clicks glide smoothly instead of jumping instantly
+    <div className="min-h-screen scroll-smooth">
       {/* Navigation */}
       <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -76,21 +75,17 @@ export function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-[#0B3C5D]/85 via-[#0B3C5D]/80 to-blue-900/75" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
-
         <div className="relative z-10 max-w-7xl mx-auto px-6 pt-24 pb-32 text-center">
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="inline-flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-xs sm:text-sm text-white shadow-lg">
-              <Globe className="w-4 h-4" />
-              {t("hero.badge")}
+              <Globe className="w-4 h-4" /> {t("hero.badge")}
             </div>
-
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight drop-shadow-2xl">
-              {t("hero.title")}
+              {t("hero.title")}{" "}
               <span className="block bg-gradient-to-r from-blue-300 to-cyan-200 bg-clip-text text-transparent mt-2 sm:mt-3">
                 {t("hero.titleHighlight")}
               </span>
             </h1>
-
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-blue-50 max-w-2xl mx-auto drop-shadow-lg px-2">
               {t("hero.subtitle")}
             </p>
@@ -99,7 +94,6 @@ export function LandingPage() {
             {!showForm ? (
               <div className="max-w-3xl mx-auto px-2 sm:px-0">
                 <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 p-3">
-                  {/* Mobile: stacked / Desktop: row */}
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Search className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 ml-2 sm:ml-3 flex-shrink-0" />
@@ -182,19 +176,19 @@ export function LandingPage() {
             {/* Trust Badges */}
             <div className="flex items-center justify-center gap-8 pt-12 flex-wrap">
               <div className="flex items-center gap-2 text-white bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/20 shadow-lg">
-                <CheckCircle className="w-5 h-5 text-green-400" />
+                <CheckCircle className="w-5 h-5 text-green-400" />{" "}
                 <span>{t("trust.verified")}</span>
               </div>
               <div className="flex items-center gap-2 text-white bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/20 shadow-lg">
-                <Shield className="w-5 h-5 text-blue-400" />
+                <Shield className="w-5 h-5 text-blue-400" />{" "}
                 <span>{t("trust.compliance")}</span>
               </div>
               <div className="flex items-center gap-2 text-white bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/20 shadow-lg">
-                <TrendingUp className="w-5 h-5 text-purple-400" />
+                <TrendingUp className="w-5 h-5 text-purple-400" />{" "}
                 <span>{t("trust.pricing")}</span>
               </div>
               <div className="flex items-center gap-2 text-white bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-full border border-white/20 shadow-lg">
-                <Globe className="w-5 h-5 text-cyan-400" />
+                <Globe className="w-5 h-5 text-cyan-400" />{" "}
                 <span>{t("trust.network")}</span>
               </div>
             </div>
@@ -203,9 +197,10 @@ export function LandingPage() {
       </section>
 
       {/* Features Section */}
+      {/* FIX: Added scroll-mt-28 to offset the fixed nav container height */}
       <section
         id="features"
-        className="max-w-7xl mx-auto px-6 py-24 -mt-16 relative z-20"
+        className="max-w-7xl mx-auto px-6 py-24 -mt-16 relative z-20 scroll-mt-28"
       >
         <div className="text-center mb-16">
           <h2 className="text-5xl font-bold text-[#0B3C5D] mb-4">
@@ -213,6 +208,7 @@ export function LandingPage() {
           </h2>
           <p className="text-xl text-slate-600">{t("features.subtitle")}</p>
         </div>
+
         <div className="grid md:grid-cols-3 gap-8">
           {[
             {
@@ -255,9 +251,10 @@ export function LandingPage() {
       </section>
 
       {/* How It Works */}
+      {/* FIX: Added scroll-mt-24 to offset the fixed nav container height */}
       <section
         id="how-it-works"
-        className="bg-gradient-to-br from-slate-50 to-blue-50 py-24"
+        className="bg-gradient-to-br from-slate-50 to-blue-50 py-24 scroll-mt-24"
       >
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
@@ -266,6 +263,7 @@ export function LandingPage() {
             </h2>
             <p className="text-xl text-slate-600">{t("howItWorks.subtitle")}</p>
           </div>
+
           <div className="grid md:grid-cols-4 gap-8">
             {[
               {
