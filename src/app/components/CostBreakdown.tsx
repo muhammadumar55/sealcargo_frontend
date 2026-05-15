@@ -326,16 +326,15 @@ export function CostBreakdown() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-        {/* Decreased py-6 to py-2.5 and sm:py-8 to sm:py-3.5 to dramatically reduce the bar height */}
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5">
-          {/* Top row: Logo + Language toggle */}
-          <div className="flex items-center justify-between mb-3 lg:mb-0">
+        {/* FIX: Added lg:flex lg:items-center lg:justify-between and lg:gap-4 to merge the rows side-by-side on desktop */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 lg:flex lg:items-center lg:justify-between lg:gap-4">
+          {/* Left Side: Logo + Language toggle */}
+          {/* FIX: Removed mb-3 completely on desktop via lg:mb-0 */}
+          <div className="flex items-center justify-between mb-3 lg:mb-0 flex-shrink-0">
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Reduced desktop height from md:h-[85px] to md:h-[60px] and sm:h-16 to sm:h-14 so the logo doesn't stretch the container */}
               <img src={logo} alt="SEAL" className="h-12 sm:h-14 md:h-[60px]" />
               <span className="text-base sm:text-xl font-bold text-[#0B3C5D] hidden xs:block">
-                {" "}
-                SmartTrade AI{" "}
+                SmartTrade AI
               </span>
             </div>
             <div className="lg:hidden">
@@ -343,14 +342,13 @@ export function CostBreakdown() {
             </div>
           </div>
 
-          {/* Bottom row on mobile / right side on desktop: action buttons */}
-          <div className="flex items-center gap-2 overflow-x-auto lg:overflow-visible lg:justify-end pb-1 lg:pb-0 -mx-1 px-1 lg:mx-0 lg:px-0">
+          {/* Right Side: action buttons */}
+          <div className="flex items-center gap-2 overflow-x-auto lg:overflow-visible lg:justify-end pb-1 lg:pb-0 -mx-1 px-1 lg:mx-0 lg:px-0 w-full">
             <button
               onClick={() => navigate(-1)}
               className="px-3 sm:px-5 py-2 sm:py-2.5 border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
             >
-              {" "}
-              {t("cost.backToSuppliers")}{" "}
+              {t("cost.backToSuppliers")}
             </button>
             <button
               onClick={() =>
@@ -365,10 +363,9 @@ export function CostBreakdown() {
               }
               className="px-3 sm:px-5 py-2 sm:py-2.5 border-2 border-red-300 text-red-700 rounded-xl hover:bg-red-50 transition-all flex items-center gap-2 shadow-sm hover:shadow-md text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
             >
-              {" "}
-              <Download className="w-4 h-4" />{" "}
-              <span className="hidden sm:inline">{t("cost.exportPDF")}</span>{" "}
-              <span className="sm:hidden">PDF</span>{" "}
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">{t("cost.exportPDF")}</span>
+              <span className="sm:hidden">PDF</span>
             </button>
             <button
               onClick={() =>
@@ -383,10 +380,9 @@ export function CostBreakdown() {
               }
               className="px-3 sm:px-5 py-2 sm:py-2.5 border-2 border-green-300 text-green-700 rounded-xl hover:bg-green-50 transition-all flex items-center gap-2 shadow-sm hover:shadow-md text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
             >
-              {" "}
-              <Download className="w-4 h-4" />{" "}
-              <span className="hidden sm:inline">{t("cost.exportExcel")}</span>{" "}
-              <span className="sm:hidden">Excel</span>{" "}
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">{t("cost.exportExcel")}</span>
+              <span className="sm:hidden">Excel</span>
             </button>
             <button
               onClick={() =>
@@ -402,15 +398,13 @@ export function CostBreakdown() {
               }
               className="px-3 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-blue-600 to-[#0B3C5D] text-white rounded-xl hover:from-blue-700 hover:to-[#0a2f47] transition-all flex items-center gap-2 shadow-lg hover:shadow-xl text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
             >
-              {" "}
               <span className="hidden sm:inline">
-                {" "}
-                {t("cost.riskAssessment")}{" "}
-              </span>{" "}
-              <span className="sm:hidden">Riesgos</span>{" "}
-              <ArrowRight className="w-4 h-4" />{" "}
+                {t("cost.riskAssessment")}
+              </span>
+              <span className="sm:hidden">Riesgos</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
-            <div className="hidden lg:block">
+            <div className="hidden lg:block flex-shrink-0">
               <LanguageToggle />
             </div>
           </div>
